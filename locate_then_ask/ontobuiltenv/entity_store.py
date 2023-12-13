@@ -47,12 +47,16 @@ class OBEEntityStore:
     def get(self, entity_iri: str):
         if entity_iri not in self.iri2entity:
             entity_cls = self.get_cls(entity_iri)
-            if entity_cls == DabgeoBuilding:
+            if entity_cls is DabgeoBuilding:
                 self.iri2entity[entity_iri] = self.createDabgeoBuilding(entity_iri)
-            elif entity_cls == OBEFlat:
+            elif entity_cls is OBEFlat:
                 self.iri2entity[entity_iri] = self.createOBEFlat(entity_iri)
-            else:
+            elif entity_cls is OBEProperty:
                 self.iri2entity[entity_iri] = self.createOBEProperty(entity_iri)
+            else:
+                raise ValueError(
+                    "Unexpected type: " + entity_cls.__name__
+                )
         return self.iri2entity[entity_iri]
 
     def createOBEProperty(self, entity_iri: str):
