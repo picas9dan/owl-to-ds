@@ -39,11 +39,11 @@ class OBELocator:
     def _locate_addr(self, query_graph: QueryGraph):
         iri = query_graph.nodes["Property"]["iri"]
         entity = self.store.get(iri)
-
-        query_graph = copy.deepcopy(query_graph)
-        query_graph.add_node("Address")
-        query_graph.add_edge("Property", "Address", "obe:hasAddress")
         assert entity.address is not None
+        query_graph = copy.deepcopy(query_graph)
+        
+        query_graph.add_node("Address")
+        query_graph.add_edge("Property", "Address", label="obe:hasAddress")
 
         sampling_frame = []
         if entity.address.postal_code is not None:
@@ -66,7 +66,7 @@ class OBELocator:
                 "Address", literal_node, label="obe:hasPostalCode/rdfs:label"
             )
 
-            label = entity.address.postal_code
+            verbn = "the postal code [{code}]".format(code=entity.address.postal_code)
         elif sampled == "street_addr":
             assert entity.address.street is not None
             assert entity.address.street_number is not None
@@ -89,10 +89,25 @@ class OBELocator:
                 ]
             )
 
-            label = "{number} {street}".format(
+            verbn = "[{number} {street}]".format(
                 number=entity.address.street_number, street=entity.address.street
             )
-        verbn = "at [{label}]".format(label=label)
+        verbn = "addresss is at " + verbn
+        return query_graph, verbn
+
+    def _locate_builtForm(self, query_graph: QueryGraph):
+        iri = query_graph.nodes["Property"]["iri"]
+        entity = self.store.get(iri)
+        assert entity.built_form is not None
+        query_graph = copy.deepcopy(query_graph)
+
+        ns, builtform_clsname = entity.built_form.rsplit("/", maxsplit=1)
+        assert ns + "/" == OBE, ns
+        builtform_clsname_node = "obe:" + builtform_clsname
+        query_graph.add_node(builtform_clsname_node, prefixed=True, template_node=True)
+        query_graph.add_edge("Property", builtform_clsname_node, label="obe:hasBuiltForm/a")
+        verbn = "built form is " + builtform_clsname
+
         return query_graph, verbn
 
     def _locate_concept_and_literal(self, query_graph: QueryGraph):
