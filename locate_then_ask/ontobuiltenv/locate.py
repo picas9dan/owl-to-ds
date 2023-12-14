@@ -160,6 +160,22 @@ class OBELocator:
 
         return query_graph, verbn
 
+    def _locate_propertyType(self, query_graph: QueryGraph):
+        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
+        assert entity.property_type is not None
+        
+        ns, propertytype_clsname = entity.property_type.rsplit("/", maxsplit=1)
+        assert ns + "/" == OBE, ns
+        propertytype_clsname_node = "obe:" + propertytype_clsname
+        query_graph.add_node(propertytype_clsname_node, prefixed=True, template_node=True)
+        query_graph.add_edge(
+            "Property", propertytype_clsname_node, label="obe:hasPropertyType/a"
+        )
+
+        verbn = "property type is " + propertytype_clsname
+
+        return query_graph, verbn
+
     def _locate_concept_and_literal(self, query_graph: QueryGraph):
         entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph
 

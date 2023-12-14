@@ -29,7 +29,7 @@ class OBEProperty:
     # latest_epc: Optional[str]                   # obe:hasLatestEPC 0..1
     number_of_habitable_rooms: Optional[int]    # obe:hasNumberOfHabitableRooms 0..1
     property_type: Optional[str]                # obe:hasPropertyType/a 0..1
-    property_usage: List[str]                   # obe:hasPropertyUsage/a*/rdfs:label 0..2
+    property_usage: List[str]                   # obe:hasPropertyUsage/a{,n}/rdfs:label 0..2
     total_floor_area: Optional[OmMeasure]       # obe:hasTotalFloorArea/om:hasValue 0..1
     # is_in: Optional[str]                        # obe:isIn 0..1
     # located_in: Optional[str]                   # obe:locatedIn 0..1

@@ -37,7 +37,7 @@ class OBEEntityStore:
             entity_iri, predicate="obe:hasPropertyType/a"
         )
         property_usage = self.retrieve_str_byPredicate(
-            entity_iri, predicate="obe:hasPropertyUsage/a*/rdfs:label"
+            entity_iri, predicate="obe:hasPropertyUsage/a?/rdfs:label"
         )
         total_floor_area = self.retrieve_omMeasure_byPredicate(
             entity_iri, predicate="obe:hasTotalFloorArea/om:hasValue"
