@@ -30,11 +30,8 @@ class OBEEntityStore:
         energy_rating = self.retrieve_str_byPredicate(
             entity_iri, predicate="obe:hasEnergyRating"
         )
-        latest_epc = self.retrieve_str_byPredicate(
-            entity_iri, predicate="obe:hasLatestEPC"
-        )
         number_of_habitable_rooms = self.retrieve_str_byPredicate(
-            entity_iri, predicate="obe:hasNumberOfHabitableRoom"
+            entity_iri, predicate="obe:hasNumberOfHabitableRooms"
         )
         property_type = self.retrieve_str_byPredicate(
             entity_iri, predicate="obe:hasPropertyType/a"
@@ -58,8 +55,7 @@ class OBEEntityStore:
             address=address,
             built_form=built_form[0] if len(built_form) > 0 else None,
             energy_rating=energy_rating[0] if len(energy_rating) > 0 else None,
-            latest_epc=latest_epc[0] if len(latest_epc) > 0 else None,
-            number_of_habitable_rooms=int(number_of_habitable_rooms)
+            number_of_habitable_rooms=int(number_of_habitable_rooms[0])
             if len(number_of_habitable_rooms) > 0
             else None,
             property_type=property_type[0] if len(property_type) > 0 else None,

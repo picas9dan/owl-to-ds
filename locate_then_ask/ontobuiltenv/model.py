@@ -26,7 +26,7 @@ class OBEProperty:
     # construction_date: Optional[str]            # obe:hasConstructionDate 0..1
     energy_rating: Optional[str]                # obe:hasEnegyRating 0..1
     # identifier: Optional[str]                   # obe:hasIdentifier 0..1
-    latest_epc: Optional[str]                   # obe:hasLatestEPC 0..1
+    # latest_epc: Optional[str]                   # obe:hasLatestEPC 0..1
     number_of_habitable_rooms: Optional[int]    # obe:hasNumberOfHabitableRooms 0..1
     property_type: Optional[str]                # obe:hasPropertyType/a 0..1
     property_usage: List[str]                   # obe:hasPropertyUsage/a*/rdfs:label 0..2

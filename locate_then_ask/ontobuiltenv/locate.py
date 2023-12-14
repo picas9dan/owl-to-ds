@@ -44,7 +44,7 @@ class OBELocator:
     def _locate_addr(self, query_graph: QueryGraph):
         entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
         assert entity.address is not None
-        
+
         query_graph.add_node("Address")
         query_graph.add_edge("Property", "Address", label="obe:hasAddress")
 
@@ -63,7 +63,10 @@ class OBELocator:
 
             literal_node = "Literal_" + str(literal_num)
             query_graph.add_node(
-                literal_node, literal=True, template_node=True, label=entity.address.postal_code
+                literal_node,
+                literal=True,
+                template_node=True,
+                label=entity.address.postal_code,
             )
             query_graph.add_edge(
                 "Address", literal_node, label="obe:hasPostalCode/rdfs:label"
@@ -80,9 +83,20 @@ class OBELocator:
                 [
                     (
                         streetnum_node,
-                        dict(literal=True, template_node=True, label=entity.address.street_number),
+                        dict(
+                            literal=True,
+                            template_node=True,
+                            label=entity.address.street_number,
+                        ),
                     ),
-                    (street_node, dict(literal=True, template_node=True, label=entity.address.street)),
+                    (
+                        street_node,
+                        dict(
+                            literal=True,
+                            template_node=True,
+                            label=entity.address.street,
+                        ),
+                    ),
                 ]
             )
             query_graph.add_edges_from(
@@ -108,7 +122,9 @@ class OBELocator:
         assert ns + "/" == OBE, ns
         builtform_clsname_node = "obe:" + builtform_clsname
         query_graph.add_node(builtform_clsname_node, prefixed=True, template_node=True)
-        query_graph.add_edge("Property", builtform_clsname_node, label="obe:hasBuiltForm/a")
+        query_graph.add_edge(
+            "Property", builtform_clsname_node, label="obe:hasBuiltForm/a"
+        )
 
         verbn = "built form is " + builtform_clsname
 
@@ -120,10 +136,27 @@ class OBELocator:
 
         literal_num = sum(n.startswith("Literal_") for n in query_graph.nodes())
         literal_node = "Literal_" + str(literal_num)
-        query_graph.add_node(literal_node, label=entity.energy_rating, template_node=True, literal=True)
+        query_graph.add_node(
+            literal_node, label=entity.energy_rating, template_node=True, literal=True
+        )
         query_graph.add_edge("Property", literal_node, label="obe:hasEnergyRating")
 
         verbn = "energy rating is [{label}]".format(label=entity.energy_rating)
+
+        return query_graph, verbn
+
+    def _locate_numOfHabitableRooms(self, query_graph: QueryGraph):
+        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
+        assert entity.number_of_habitable_rooms is not None
+
+        literal_num = sum(n.startswith("Literal_") for n in query_graph.nodes())
+        literal_node = "Literal_" + str(literal_num)
+        query_graph.add_node(
+            literal_node, label=entity.number_of_habitable_rooms, template_node=True, literal=True
+        )
+        query_graph.add_edge("Property", literal_node, label="obe:hasNumberOfHabitableRooms")
+
+        verbn = "number of habitable room is " + str(entity.number_of_habitable_rooms)
 
         return query_graph, verbn
 
