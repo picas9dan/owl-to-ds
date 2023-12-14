@@ -1,8 +1,8 @@
 import json
-from constants.functions import NumOp, StrOp
+from constants.functions import OSNumOp, StrOp
 
 
-PUBLIC_ENUMS = {"NumOp": NumOp, "StrOp": StrOp}
+PUBLIC_ENUMS = {"OSNumOp": OSNumOp, "StrOp": StrOp}
 
 
 class EnumEncoder(json.JSONEncoder):

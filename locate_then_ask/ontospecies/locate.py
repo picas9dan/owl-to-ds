@@ -4,7 +4,7 @@ from typing import Iterable
 
 from constants.functions import (
     COMPARATIVE_COND_MAKER,
-    NumOp
+    OSNumOp
 )
 from constants.ontospecies import CHEMCLASS_KEY, KEY2LABELS, USE_KEY
 from locate_then_ask.ontospecies.entity_store import OSEntityStore
@@ -103,15 +103,15 @@ class OSSpeciesLocator:
 
             species_property = random.choice(entity.key2property[key])
             property_value = species_property.value
-            operator = random.choice([x.value for x in NumOp])
+            operator = random.choice([x.value for x in OSNumOp])
 
-            if operator in [NumOp.LESS_THAN, NumOp.LESS_THAN_EQUAL]:
+            if operator in [OSNumOp.LESS_THAN, OSNumOp.LESS_THAN_EQUAL]:
                 num_value = get_gt(property_value)
-            elif operator in [NumOp.GREATER_THAN, NumOp.GREATER_THAN_EQUAL]:
+            elif operator in [OSNumOp.GREATER_THAN, OSNumOp.GREATER_THAN_EQUAL]:
                 num_value = get_lt(property_value)
-            elif operator in [NumOp.EQUAL, NumOp.AROUND]:
+            elif operator in [OSNumOp.EQUAL, OSNumOp.AROUND]:
                 num_value = property_value
-            elif operator in [NumOp.INSIDE_RANGE, NumOp.OUTSIDE_RANGE]:
+            elif operator in [OSNumOp.INSIDE_RANGE, OSNumOp.OUTSIDE_RANGE]:
                 num_value = (get_lt(property_value), get_gt(property_value))
             else:
                 raise ValueError("Unrecognised comparative: " + operator)

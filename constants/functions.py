@@ -9,6 +9,13 @@ class NumOp(Enum):
     LESS_THAN_EQUAL = "<="
     GREATER_THAN_EQUAL = ">="
     EQUAL = "="
+
+class OSNumOp(Enum):
+    LESS_THAN = "<"
+    GREATER_THAN = ">"
+    LESS_THAN_EQUAL = "<="
+    GREATER_THAN_EQUAL = ">="
+    EQUAL = "="
     AROUND = "around"
     INSIDE_RANGE = "in"
     OUTSIDE_RANGE = "outside"
@@ -70,11 +77,16 @@ def outside_maker(x: Tuple[float, float]):
 
 COMPARATIVE_COND_MAKER = {
     NumOp.LESS_THAN: lt_maker,
+    OSNumOp.LESS_THAN: lt_maker,
     NumOp.GREATER_THAN: gt_maker,
+    OSNumOp.GREATER_THAN: gt_maker,
     NumOp.LESS_THAN_EQUAL: le_maker,
+    OSNumOp.LESS_THAN_EQUAL: le_maker,
     NumOp.GREATER_THAN_EQUAL: ge_maker,
+    OSNumOp.GREATER_THAN_EQUAL: ge_maker,
     NumOp.EQUAL: eq_maker,
-    NumOp.AROUND: around_maker,
-    NumOp.INSIDE_RANGE: inside_maker,
-    NumOp.OUTSIDE_RANGE: outside_maker,
+    OSNumOp.EQUAL: eq_maker,
+    OSNumOp.AROUND: around_maker,
+    OSNumOp.INSIDE_RANGE: inside_maker,
+    OSNumOp.OUTSIDE_RANGE: outside_maker,
 }
