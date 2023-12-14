@@ -9,7 +9,7 @@ from constants.functions import (
 from constants.ontospecies import CHEMCLASS_KEY, KEY2LABELS, USE_KEY
 from locate_then_ask.ontospecies.entity_store import OSEntityStore
 from locate_then_ask.query_graph import QueryGraph, get_objs, get_preds
-from locate_then_ask.utils import get_gt, get_lt
+from utils.numerical import get_gt, get_lt
 
 
 class OSSpeciesLocator:
@@ -147,9 +147,9 @@ class OSSpeciesLocator:
 
         if node is None:
             literal_num = len(
-                [n for n in query_graph.nodes() if n.startswith("literal")]
+                [n for n in query_graph.nodes() if n.startswith("Literal_")]
             )
-            node = "literal_" + str(literal_num)
+            node = "Literal_" + str(literal_num)
 
         query_graph.add_node(
             node, label=node_label, literal=True, template_node=template_node
