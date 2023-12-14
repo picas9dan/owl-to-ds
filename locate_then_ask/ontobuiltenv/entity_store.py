@@ -4,6 +4,7 @@ from locate_then_ask.kg_client import KgClient
 from locate_then_ask.ontobuiltenv.model import (
     IctAddress,
     OBEProperty,
+    OBEPropertyUsage,
     OmMeasure,
 )
 
@@ -22,7 +23,9 @@ class OBEEntityStore:
         return self.iri2entity[entity_iri]
 
     def create(self, entity_iri: str):
-        concepts = self.retrieve_str_byPredicate(entity_iri, predicate="a/rdfs:subClassOf*")
+        concepts = self.retrieve_str_byPredicate(
+            entity_iri, predicate="a/rdfs:subClassOf*"
+        )
         address = self.retrieve_address(entity_iri)
         built_form = self.retrieve_str_byPredicate(
             entity_iri, predicate="obe:hasBuiltForm/a"
@@ -36,9 +39,7 @@ class OBEEntityStore:
         property_type = self.retrieve_str_byPredicate(
             entity_iri, predicate="obe:hasPropertyType/a"
         )
-        property_usage = self.retrieve_str_byPredicate(
-            entity_iri, predicate="obe:hasPropertyUsage/a?/rdfs:label"
-        )
+        property_usage = self.retrieve_propertyUsage(entity_iri)
         total_floor_area = self.retrieve_omMeasure_byPredicate(
             entity_iri, predicate="obe:hasTotalFloorArea/om:hasValue"
         )
@@ -90,6 +91,32 @@ LIMIT 1"""
             unit_name=value_binding.get("UnitName"),
             postal_code=value_binding.get("PostalCode"),
         )
+
+    def retrieve_propertyUsage(self, entity_iri: str):
+        query_template = """PREFIX obe: <https://www.theworldavatar.com/kg/ontobuiltenv/>
+
+SELECT DISTINCT ?PropertyUsage (GROUP_CONCAT(?PropertyUsageType) AS ?PropertyUsageTypes) (GROUP_CONCAT(?UsageShare) AS ?UsageShares) WHERE {{
+    <{IRI}> obe:hasPropertyUsage ?PropertyUsage .
+    ?PropertyUsage a/rdfs:subClassOf* ?PropertyUsageType .
+    OPTIONAL {{
+        ?PropertyUsage obe:hasUsageShare ?UsageShare
+    }}
+}}
+GROUP BY ?PropertyUsage"""
+        query = query_template.format(IRI=entity_iri)
+        response_bindings = self.kg_client.query(query)["results"]["bindings"]
+        value_bindings = [
+            {k: v["value"] for k, v in x.items()} for x in response_bindings
+        ]
+
+        return [
+            OBEPropertyUsage(
+                iri=x["PropertyUsage"],
+                concepts=x["PropertyUsageTypes"].split(),
+                usage_share=float(x["UsageShares"]) if x["UsageShares"] else None,
+            )
+            for x in value_bindings
+        ]
 
     def retrieve_str_byPredicate(self, entity_iri: str, predicate: str):
         query_template = """PREFIX obe: <https://www.theworldavatar.com/kg/ontobuiltenv/>

@@ -1,25 +1,34 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from constants.ontobuiltenv import OBEAttrKey
 
 
-@dataclass 
+@dataclass(frozen=True)
 class IctAddress:
     street: Optional[str]                       # ict:hasStreet
     street_number: Optional[str]                # ict:hasStreetNumber
     unit_name: Optional[str]                    # obe:hasUnitName
     postal_code: Optional[str]                  # obe:hasPostalCode/rdfs:label
 
-@dataclass
+@dataclass(frozen=True)
+class OBEPropertyUsage:
+    iri: str
+    concepts: Tuple[str]                         # a/rdfs:subClassOf*
+    usage_share: Optional[float]                # obe:hasUsageShare
+
+    def __post_init__(self):
+        object.__setattr__(self, 'concepts', tuple(self.concepts))
+
+@dataclass(frozen=True)
 class OmMeasure:
     numerical_value: float                      # om:hasNumericalValue
     unit_iri: str                               # om:hasUnit
 
-@dataclass
+@dataclass(frozen=True)
 class OBEProperty:
     iri: str
-    concepts: List[str]                         # a/rdfs:subClassOf*
+    concepts: Tuple[str]                         # a/rdfs:subClassOf*
     address: Optional[IctAddress]               # obe:hasAddress 0..1 
     built_form: Optional[str]                   # obe:hasBuiltForm/a 0..1
     # construction_component: List[str]           # obe:hasConstructionComponent 0..4
@@ -29,13 +38,17 @@ class OBEProperty:
     # latest_epc: Optional[str]                   # obe:hasLatestEPC 0..1
     number_of_habitable_rooms: Optional[int]    # obe:hasNumberOfHabitableRooms 0..1
     property_type: Optional[str]                # obe:hasPropertyType/a 0..1
-    property_usage: List[str]                   # obe:hasPropertyUsage/a{,n}/rdfs:label 0..2
+    property_usage: Tuple[OBEPropertyUsage]      # obe:hasPropertyUsage 0..2
     total_floor_area: Optional[OmMeasure]       # obe:hasTotalFloorArea/om:hasValue 0..1
     # is_in: Optional[str]                        # obe:isIn 0..1
     # located_in: Optional[str]                   # obe:locatedIn 0..1
     market_value: Optional[OmMeasure]           # obe:hasMarketValue/om:hasValue 0..1
     # latest_transaction_record: Optional[str]    # obe:hasLatestTransactionRecord 0..1
     ground_elevation: Optional[OmMeasure]       # obe:hasGroundElevation/om:hasValue, only for dabgeo:Building
+
+    def __post_init__(self):
+        object.__setattr__(self, "concepts", tuple(self.concepts))
+        object.__setattr__(self, "property_usage", tuple(self.property_usage))
 
     def get_nonnone_keys(self):
         keys: List[OBEAttrKey] = []
