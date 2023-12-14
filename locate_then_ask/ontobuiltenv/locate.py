@@ -36,11 +36,14 @@ class OBELocator:
 
         return query_graph, verbalization
 
-    def _locate_addr(self, query_graph: QueryGraph):
+    def _retrieveTopicEntity_cloneQueryGraph(self, query_graph):
         iri = query_graph.nodes["Property"]["iri"]
         entity = self.store.get(iri)
+        return entity, copy.deepcopy(query_graph)
+
+    def _locate_addr(self, query_graph: QueryGraph):
+        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
         assert entity.address is not None
-        query_graph = copy.deepcopy(query_graph)
         
         query_graph.add_node("Address")
         query_graph.add_edge("Property", "Address", label="obe:hasAddress")
@@ -60,7 +63,7 @@ class OBELocator:
 
             literal_node = "Literal_" + str(literal_num)
             query_graph.add_node(
-                literal_node, literal=True, label=entity.address.postal_code
+                literal_node, literal=True, template_node=True, label=entity.address.postal_code
             )
             query_graph.add_edge(
                 "Address", literal_node, label="obe:hasPostalCode/rdfs:label"
@@ -77,9 +80,9 @@ class OBELocator:
                 [
                     (
                         streetnum_node,
-                        dict(literal=True, label=entity.address.street_number),
+                        dict(literal=True, template_node=True, label=entity.address.street_number),
                     ),
-                    (street_node, dict(literal=True, label=entity.address.street)),
+                    (street_node, dict(literal=True, template_node=True, label=entity.address.street)),
                 ]
             )
             query_graph.add_edges_from(
@@ -92,27 +95,40 @@ class OBELocator:
             verbn = "[{number} {street}]".format(
                 number=entity.address.street_number, street=entity.address.street
             )
+
         verbn = "addresss is at " + verbn
+
         return query_graph, verbn
 
     def _locate_builtForm(self, query_graph: QueryGraph):
-        iri = query_graph.nodes["Property"]["iri"]
-        entity = self.store.get(iri)
+        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
         assert entity.built_form is not None
-        query_graph = copy.deepcopy(query_graph)
 
         ns, builtform_clsname = entity.built_form.rsplit("/", maxsplit=1)
         assert ns + "/" == OBE, ns
         builtform_clsname_node = "obe:" + builtform_clsname
         query_graph.add_node(builtform_clsname_node, prefixed=True, template_node=True)
         query_graph.add_edge("Property", builtform_clsname_node, label="obe:hasBuiltForm/a")
+
         verbn = "built form is " + builtform_clsname
 
         return query_graph, verbn
 
+    def _locate_energyRating(self, query_graph: QueryGraph):
+        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
+        assert entity.energy_rating is not None
+
+        literal_num = sum(n.startswith("Literal_") for n in query_graph.nodes())
+        literal_node = "Literal_" + str(literal_num)
+        query_graph.add_node(literal_node, label=entity.energy_rating, template_node=True, literal=True)
+        query_graph.add_edge("Property", literal_node, label="obe:hasEnergyRating")
+
+        verbn = "energy rating is [{label}]".format(label=entity.energy_rating)
+
+        return query_graph, verbn
+
     def _locate_concept_and_literal(self, query_graph: QueryGraph):
-        iri = query_graph.nodes["Property"]["iri"]
-        entity = self.store.get(iri)
+        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph
 
         sampled_attrs = tuple(
             OBEAttrKey(pred[len("obe:has") :])
