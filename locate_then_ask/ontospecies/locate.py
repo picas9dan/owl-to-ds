@@ -9,7 +9,7 @@ from constants.functions import (
 from constants.ontospecies import CHEMCLASS_KEY, KEY2LABELS, USE_KEY
 from locate_then_ask.ontospecies.entity_store import OSEntityStore
 from locate_then_ask.query_graph import QueryGraph, get_objs, get_preds
-from utils.numerical import get_gt, get_lt
+from utils.numerical import NumGetter
 
 
 class OSSpeciesLocator:
@@ -106,13 +106,13 @@ class OSSpeciesLocator:
             operator = random.choice([x.value for x in OSNumOp])
 
             if operator in [OSNumOp.LESS_THAN, OSNumOp.LESS_THAN_EQUAL]:
-                num_value = get_gt(property_value)
+                num_value = NumGetter.gt(property_value)
             elif operator in [OSNumOp.GREATER_THAN, OSNumOp.GREATER_THAN_EQUAL]:
-                num_value = get_lt(property_value)
+                num_value = NumGetter.lt(property_value)
             elif operator in [OSNumOp.EQUAL, OSNumOp.AROUND]:
                 num_value = property_value
             elif operator in [OSNumOp.INSIDE_RANGE, OSNumOp.OUTSIDE_RANGE]:
-                num_value = (get_lt(property_value), get_gt(property_value))
+                num_value = (NumGetter.lt(property_value), NumGetter.gt(property_value))
             else:
                 raise ValueError("Unrecognised comparative: " + operator)
 
