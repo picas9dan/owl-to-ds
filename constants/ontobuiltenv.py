@@ -17,6 +17,19 @@ class OBEAttrKey(Enum):
 
 OBE_ATTR_KEYS = [e.value for e in OBEAttrKey]
 
+OBE_ATTR_LABELS = {
+    OBEAttrKey.ADDRESS: ["address"],
+    OBEAttrKey.BUILT_FORM: ["built form"],
+    OBEAttrKey.ENERGY_RATING: ["energy rating"],
+    OBEAttrKey.IDENTIFIER: ["identifier"],
+    OBEAttrKey.LATEST_EPC: ["latest EPC"],
+    OBEAttrKey.NUMBER_OF_HABITABLE_ROOMS: ["number of habitable rooms"],
+    OBEAttrKey.PROPERTY_TYPE: ["type"],
+    OBEAttrKey.PROPERTY_USAGE: ["usage"],
+    OBEAttrKey.TOTAL_FLOOR_AREA: ["total floor area"],
+    OBEAttrKey.MARKET_VALUE: ["market value"],
+    OBEAttrKey.GROUND_ELEVATION: ["ground elevation"],
+}
 
 OBE_PROPERTYUSAGE_LABELS = {
     "Domestic": ["domestic property", "living space"],

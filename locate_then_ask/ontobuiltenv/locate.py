@@ -4,8 +4,14 @@ import random
 from constants.functions import NumOp
 from constants.namespaces import DABGEO, OBE, OM
 from constants.om import OM_KEY_LABELS
-from constants.ontobuiltenv import OBE_ATTR_KEYS, OBE_PROPERTYUSAGE_LABELS, OBEAttrKey
+from constants.ontobuiltenv import (
+    OBE_ATTR_KEYS,
+    OBE_ATTR_LABELS,
+    OBE_PROPERTYUSAGE_LABELS,
+    OBEAttrKey,
+)
 from locate_then_ask.ontobuiltenv.entity_store import OBEEntityStore
+from locate_then_ask.ontobuiltenv.model import OmMeasure
 from locate_then_ask.query_graph import QueryGraph
 from utils.numerical import make_operand_and_verbn
 
@@ -123,12 +129,10 @@ class OBELocator:
         assert entity.built_form is not None
 
         assert entity.built_form.startswith(OBE), entity.built_form
-        clsname = entity.built_form[len(OBE):]
+        clsname = entity.built_form[len(OBE) :]
         clsname_node = "obe:" + clsname
         query_graph.add_node(clsname_node, prefixed=True, template_node=True)
-        query_graph.add_edge(
-            "Property", clsname_node, label="obe:hasBuiltForm/a"
-        )
+        query_graph.add_edge("Property", clsname_node, label="obe:hasBuiltForm/a")
 
         verbn = "built form is " + clsname
 
@@ -219,7 +223,7 @@ class OBELocator:
         for i, use in enumerate(samples):
             use_node = "PropertyUsage_" + str(i)
             assert use.concept.startswith(OBE), use.concept
-            clsname = use.concept[len(OBE):]
+            clsname = use.concept[len(OBE) :]
             clsname_node = "obe:" + clsname
 
             query_graph.add_nodes_from(
@@ -254,7 +258,7 @@ class OBELocator:
                 if share_pctg_str.endswith("00"):
                     share_pctg_str = share_pctg_str[:-2]
                 share_pctg_str += "%"
-                verbn_numop = verbn_numop.replace(str(operand),share_pctg_str)
+                verbn_numop = verbn_numop.replace(str(operand), share_pctg_str)
                 operand = operand / 100
 
                 literal_node = "UsageShare_" + str(i)
@@ -291,30 +295,29 @@ class OBELocator:
 
         return query_graph, verbalization
 
-    def _locate_totalFloorArea(self, query_graph: QueryGraph):
-        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
-        assert entity.total_floor_area is not None
-
+    def _locate_omMeasure(
+        self, query_graph: QueryGraph, key: OBEAttrKey, measure: OmMeasure
+    ):
         operator = random.choice(tuple(NumOp))
         operand, op_verbn = make_operand_and_verbn(
-            operator, value=entity.total_floor_area.numerical_value
+            operator, value=measure.numerical_value
         )
 
-        key = "TotalFloorAreaValue"
-        numval_node = "TotalFloorAreaNumericalValue"
+        attrval_node = key.value + "Value"
+        numval_node = key.value + "NumericalValue"
 
         func_num = sum(n.startswith("Func_") for n in query_graph.nodes())
         func_node = "Func_" + str(func_num)
         func_label = operator.value + "\n" + str(operand)
 
-        assert entity.total_floor_area.unit_iri.startswith(OM), entity.total_floor_area.unit_iri
-        unit = entity.total_floor_area.unit_iri[len(OM):]
+        assert measure.unit_iri.startswith(OM), measure.unit_iri
+        unit = measure.unit_iri[len(OM) :]
         unit_node = "om:" + unit
         unit_verbn = random.choice(OM_KEY_LABELS[unit])
 
         query_graph.add_nodes_from(
             [
-                (key, dict()),
+                (attrval_node, dict()),
                 (numval_node, dict(template_node=True)),
                 (
                     func_node,
@@ -326,24 +329,57 @@ class OBELocator:
                         label=func_label,
                     ),
                 ),
-                (unit_node, dict(template_node=True))
+                (unit_node, dict(template_node=True)),
             ]
         )
         query_graph.add_edges_from(
             [
-                ("Property", key, dict(label="obe:hasTotalFloorArea/om:hasValue")),
-                (key, numval_node, dict(label="om:hasNumericalValue")),
+                (
+                    "Property",
+                    attrval_node,
+                    dict(label="obe:has{key}/om:hasValue".format(key=key.value)),
+                ),
+                (attrval_node, numval_node, dict(label="om:hasNumericalValue")),
                 (numval_node, func_node, dict(label="func")),
-                (key, unit_node, dict(label="om:hasUnit"))
+                (attrval_node, unit_node, dict(label="om:hasUnit")),
             ]
         )
 
-        verbn = "total floor area {op}{unit}".format(op=op_verbn, unit=unit_verbn)
+        verbn = "{key} {op} {unit}".format(
+            key=random.choice(OBE_ATTR_LABELS[key]), op=op_verbn, unit=unit_verbn
+        )
 
         return query_graph, verbn
 
+    def _locate_totalFloorArea(self, query_graph: QueryGraph):
+        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
+        assert entity.total_floor_area is not None
+        return self._locate_omMeasure(
+            query_graph,
+            key=OBEAttrKey.TOTAL_FLOOR_AREA,
+            measure=entity.total_floor_area,
+        )
+
+    def _locate_marketValue(self, query_graph: QueryGraph):
+        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
+        assert entity.market_value is not None
+        return self._locate_omMeasure(
+            query_graph,
+            key=OBEAttrKey.MARKET_VALUE,
+            measure=entity.market_value
+        )
+    
+    def _locate_groundElevation(self, query_graph: QueryGraph):
+        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
+        assert entity.ground_elevation is not None
+        return self._locate_omMeasure(
+            query_graph,
+            key=OBEAttrKey.GROUND_ELEVATION,
+            measure=entity.ground_elevation
+        )
+
     def _locate_concept_and_literal(self, query_graph: QueryGraph):
-        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph()
+        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
 
         sampled_attrs = tuple(
             OBEAttrKey(pred[len("obe:has") :])
