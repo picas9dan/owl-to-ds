@@ -1,9 +1,11 @@
 import copy
 import random
+from constants.functions import NumOp
 from constants.namespaces import DABGEO, OBE
 from constants.ontobuiltenv import OBE_ATTR_KEYS, OBEAttrKey
 from locate_then_ask.ontobuiltenv.entity_store import OBEEntityStore
 from locate_then_ask.query_graph import QueryGraph
+from utils.numerical import make_operand_and_verbn
 
 
 class OBELocator:
@@ -149,14 +151,24 @@ class OBELocator:
         entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
         assert entity.number_of_habitable_rooms is not None
 
-        literal_num = sum(n.startswith("Literal_") for n in query_graph.nodes())
-        literal_node = "Literal_" + str(literal_num)
-        query_graph.add_node(
-            literal_node, label=entity.number_of_habitable_rooms, template_node=True, literal=True
-        )
-        query_graph.add_edge("Property", literal_node, label="obe:hasNumberOfHabitableRooms")
+        operator = random.choice(tuple(NumOp))
+        operand, verbn = make_operand_and_verbn(operator, value=entity.number_of_habitable_rooms, returns_int=True)
 
-        verbn = "number of habitable room is " + str(entity.number_of_habitable_rooms)
+        literal_node = "NumberOfHabitableRooms"
+        func_num = sum(n.startswith("Func_") for n in query_graph.nodes())
+        func_node = "Func_" + str(func_num)
+        func_label = operator.value + "\n" + str(operand)
+        
+        query_graph.add_nodes_from([
+            (literal_node, dict(literal=True)),
+            (func_node, dict(func=True, template_node=True, operator=operator, operand=operand, label=func_label))
+        ])
+        query_graph.add_edges_from([
+            ("Property", literal_node, dict(label="obe:hasNumberOfHabitableRooms")),
+            (literal_node, func_node, dict(label="func"))
+        ])
+
+        verbn = "number of habitable room is " + verbn
 
         return query_graph, verbn
 
@@ -175,9 +187,13 @@ class OBELocator:
         verbn = "property type is " + propertytype_clsname
 
         return query_graph, verbn
+        
+
+    def _locate_propertyUsage(self, query_graph: QueryGraph):
+        pass
 
     def _locate_concept_and_literal(self, query_graph: QueryGraph):
-        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph
+        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph()
 
         sampled_attrs = tuple(
             OBEAttrKey(pred[len("obe:has") :])
