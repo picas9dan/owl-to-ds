@@ -148,6 +148,6 @@ LIMIT 1"""
         if len(response_bindings) == 0:
             return None
         return OmMeasure(
-            numerical_value=response_bindings[0]["NumericalValue"]["value"],
+            numerical_value=Decimal(response_bindings[0]["NumericalValue"]["value"]),
             unit_iri=response_bindings[0]["Unit"]["value"],
         )

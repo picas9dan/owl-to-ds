@@ -2,7 +2,8 @@ import copy
 from decimal import Decimal
 import random
 from constants.functions import NumOp
-from constants.namespaces import DABGEO, OBE
+from constants.namespaces import DABGEO, OBE, OM
+from constants.om import OM_KEY_LABELS
 from constants.ontobuiltenv import OBE_ATTR_KEYS, OBE_PROPERTYUSAGE_LABELS, OBEAttrKey
 from locate_then_ask.ontobuiltenv.entity_store import OBEEntityStore
 from locate_then_ask.query_graph import QueryGraph
@@ -121,15 +122,15 @@ class OBELocator:
         entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
         assert entity.built_form is not None
 
-        ns, builtform_clsname = entity.built_form.rsplit("/", maxsplit=1)
-        assert ns + "/" == OBE, ns
-        builtform_clsname_node = "obe:" + builtform_clsname
-        query_graph.add_node(builtform_clsname_node, prefixed=True, template_node=True)
+        assert entity.built_form.startswith(OBE), entity.built_form
+        clsname = entity.built_form[len(OBE):]
+        clsname_node = "obe:" + clsname
+        query_graph.add_node(clsname_node, prefixed=True, template_node=True)
         query_graph.add_edge(
-            "Property", builtform_clsname_node, label="obe:hasBuiltForm/a"
+            "Property", clsname_node, label="obe:hasBuiltForm/a"
         )
 
-        verbn = "built form is " + builtform_clsname
+        verbn = "built form is " + clsname
 
         return query_graph, verbn
 
@@ -217,8 +218,8 @@ class OBELocator:
         )
         for i, use in enumerate(samples):
             use_node = "PropertyUsage_" + str(i)
-            ns, clsname = use.concept.rsplit("/", maxsplit=1)
-            assert ns + "/" == OBE, ns
+            assert use.concept.startswith(OBE), use.concept
+            clsname = use.concept[len(OBE):]
             clsname_node = "obe:" + clsname
 
             query_graph.add_nodes_from(
@@ -248,7 +249,7 @@ class OBELocator:
 
                 if operator == NumOp.EQUAL:
                     verbn_numop = str(operand)
-                    
+
                 share_pctg_str = str(operand)
                 if share_pctg_str.endswith("00"):
                     share_pctg_str = share_pctg_str[:-2]
@@ -289,6 +290,57 @@ class OBELocator:
         verbalization = "use is " + " and ".join(verbns)
 
         return query_graph, verbalization
+
+    def _locate_totalFloorArea(self, query_graph: QueryGraph):
+        entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph(query_graph)
+        assert entity.total_floor_area is not None
+
+        operator = random.choice(tuple(NumOp))
+        operand, op_verbn = make_operand_and_verbn(
+            operator, value=entity.total_floor_area.numerical_value
+        )
+
+        key = "TotalFloorAreaValue"
+        numval_node = "TotalFloorAreaNumericalValue"
+
+        func_num = sum(n.startswith("Func_") for n in query_graph.nodes())
+        func_node = "Func_" + str(func_num)
+        func_label = operator.value + "\n" + str(operand)
+
+        assert entity.total_floor_area.unit_iri.startswith(OM), entity.total_floor_area.unit_iri
+        unit = entity.total_floor_area.unit_iri[len(OM):]
+        unit_node = "om:" + unit
+        unit_verbn = random.choice(OM_KEY_LABELS[unit])
+
+        query_graph.add_nodes_from(
+            [
+                (key, dict()),
+                (numval_node, dict(template_node=True)),
+                (
+                    func_node,
+                    dict(
+                        func=True,
+                        template_node=True,
+                        operator=operator,
+                        operand=operand,
+                        label=func_label,
+                    ),
+                ),
+                (unit_node, dict(template_node=True))
+            ]
+        )
+        query_graph.add_edges_from(
+            [
+                ("Property", key, dict(label="obe:hasTotalFloorArea/om:hasValue")),
+                (key, numval_node, dict(label="om:hasNumericalValue")),
+                (numval_node, func_node, dict(label="func")),
+                (key, unit_node, dict(label="om:hasUnit"))
+            ]
+        )
+
+        verbn = "total floor area {op}{unit}".format(op=op_verbn, unit=unit_verbn)
+
+        return query_graph, verbn
 
     def _locate_concept_and_literal(self, query_graph: QueryGraph):
         entity, query_graph = self._retrieveTopicEntity_cloneQueryGraph()
