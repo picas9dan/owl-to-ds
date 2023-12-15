@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import List, Optional, Tuple
 
 from constants.ontobuiltenv import OBEAttrKey
@@ -14,21 +15,18 @@ class IctAddress:
 @dataclass(frozen=True)
 class OBEPropertyUsage:
     iri: str
-    concepts: Tuple[str]                         # a/rdfs:subClassOf*
-    usage_share: Optional[float]                # obe:hasUsageShare
-
-    def __post_init__(self):
-        object.__setattr__(self, 'concepts', tuple(self.concepts))
+    concept: str                                # a
+    usage_share: Optional[Decimal]                # obe:hasUsageShare
 
 @dataclass(frozen=True)
 class OmMeasure:
-    numerical_value: float                      # om:hasNumericalValue
+    numerical_value: Decimal                     # om:hasNumericalValue
     unit_iri: str                               # om:hasUnit
 
 @dataclass(frozen=True)
 class OBEProperty:
     iri: str
-    concepts: Tuple[str]                         # a/rdfs:subClassOf*
+    concepts: Tuple[str, ...]                         # a/rdfs:subClassOf*
     address: Optional[IctAddress]               # obe:hasAddress 0..1 
     built_form: Optional[str]                   # obe:hasBuiltForm/a 0..1
     # construction_component: List[str]           # obe:hasConstructionComponent 0..4
@@ -36,9 +34,9 @@ class OBEProperty:
     energy_rating: Optional[str]                # obe:hasEnegyRating 0..1
     # identifier: Optional[str]                   # obe:hasIdentifier 0..1
     # latest_epc: Optional[str]                   # obe:hasLatestEPC 0..1
-    number_of_habitable_rooms: Optional[int]    # obe:hasNumberOfHabitableRooms 0..1
+    number_of_habitable_rooms: Optional[Decimal]    # obe:hasNumberOfHabitableRooms 0..1
     property_type: Optional[str]                # obe:hasPropertyType/a 0..1
-    property_usage: Tuple[OBEPropertyUsage]      # obe:hasPropertyUsage 0..2
+    property_usage: Tuple[OBEPropertyUsage, ...]      # obe:hasPropertyUsage 0..2
     total_floor_area: Optional[OmMeasure]       # obe:hasTotalFloorArea/om:hasValue 0..1
     # is_in: Optional[str]                        # obe:isIn 0..1
     # located_in: Optional[str]                   # obe:locatedIn 0..1

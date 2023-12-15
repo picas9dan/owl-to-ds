@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Dict
 
 from locate_then_ask.kg_client import KgClient
@@ -56,7 +57,7 @@ class OBEEntityStore:
             address=address,
             built_form=built_form[0] if len(built_form) > 0 else None,
             energy_rating=energy_rating[0] if len(energy_rating) > 0 else None,
-            number_of_habitable_rooms=int(number_of_habitable_rooms[0])
+            number_of_habitable_rooms=Decimal(number_of_habitable_rooms[0])
             if len(number_of_habitable_rooms) > 0
             else None,
             property_type=property_type[0] if len(property_type) > 0 else None,
@@ -95,9 +96,9 @@ LIMIT 1"""
     def retrieve_propertyUsage(self, entity_iri: str):
         query_template = """PREFIX obe: <https://www.theworldavatar.com/kg/ontobuiltenv/>
 
-SELECT DISTINCT ?PropertyUsage (GROUP_CONCAT(?PropertyUsageType) AS ?PropertyUsageTypes) (GROUP_CONCAT(?UsageShare) AS ?UsageShares) WHERE {{
+SELECT DISTINCT ?PropertyUsage (SAMPLE(?PropertyUsageType) AS ?Concept) (SAMPLE(?UsageShare) AS ?Share) WHERE {{
     <{IRI}> obe:hasPropertyUsage ?PropertyUsage .
-    ?PropertyUsage a/rdfs:subClassOf* ?PropertyUsageType .
+    ?PropertyUsage a ?PropertyUsageType .
     OPTIONAL {{
         ?PropertyUsage obe:hasUsageShare ?UsageShare
     }}
@@ -112,8 +113,8 @@ GROUP BY ?PropertyUsage"""
         return [
             OBEPropertyUsage(
                 iri=x["PropertyUsage"],
-                concepts=x["PropertyUsageTypes"].split(),
-                usage_share=float(x["UsageShares"]) if x["UsageShares"] else None,
+                concept=x["Concept"],
+                usage_share=Decimal(x["Share"]) if x.get("Share") else None,
             )
             for x in value_bindings
         ]
