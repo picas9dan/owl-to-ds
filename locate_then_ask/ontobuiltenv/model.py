@@ -57,8 +57,6 @@ class OBEProperty:
             keys.append(OBEAttrKey.BUILT_FORM)
         if self.energy_rating is not None:
             keys.append(OBEAttrKey.ENERGY_RATING)
-        if self.latest_epc is not None:
-            keys.append(OBEAttrKey.LATEST_EPC)
         if self.number_of_habitable_rooms is not None:
             keys.append(OBEAttrKey.NUMBER_OF_HABITABLE_ROOMS)
         if self.property_type is not None:
