@@ -22,9 +22,9 @@ class NumGetter:
                 )
             )
 
-        if value == Decimal('0'):
-            lt = Decimal('-1.0')
-        elif value > Decimal('0'):
+        if value == 0:
+            lt = Decimal('-1.')
+        elif value > 0:
             lt = value * Decimal('0.9')
         else:
             lt = value * Decimal('1.1')
@@ -32,12 +32,13 @@ class NumGetter:
         if to_int or random.getrandbits(1):
             lt = math.floor(lt)
             if lt == value:
-                lt = value - Decimal('1')
+                lt = value - 1
 
-        lt = max(lt, min_val)
+        if min_val is not None:
+            lt = max(lt, min_val)
 
         assert lt < value, value
-        assert lt * value >= Decimal('0'), value
+        assert lt * value >= 0, value
         return lt
 
     @classmethod
@@ -48,16 +49,16 @@ class NumGetter:
         max_val: Optional[Decimal] = None,
     ):
         """Returns a number greater than input of the same sign."""
-        if value > max_val:
+        if max_val is not None and value > max_val:
             raise ValueError(
                 "Unable to generate a number greater than {value} but no greater than {max}".format(
                     value=value, max=max_val
                 )
             )
 
-        if value == Decimal('0'):
-            gt = Decimal('1.0')
-        elif value > Decimal('0'):
+        if value == 0:
+            gt = Decimal('1.')
+        elif value > 0:
             gt = value * Decimal('1.1')
         else:
             gt = value * Decimal('0.9')
@@ -65,12 +66,13 @@ class NumGetter:
         if to_int or random.getrandbits(1):
             gt = math.ceil(gt)
             if gt == value:
-                gt = value + Decimal('1')
+                gt = value + 1
 
-        gt = min(gt, max_val)
+        if max_val is not None:
+            gt = min(gt, max_val)
 
         assert gt > value, value
-        assert gt * value >= Decimal('0'), value
+        assert gt * value >= 0, value
         return gt
 
 
