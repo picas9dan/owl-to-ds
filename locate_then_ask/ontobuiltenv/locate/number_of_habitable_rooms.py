@@ -2,6 +2,7 @@ import copy
 import random
 
 from constants.functions import NumOp
+from constants.ontobuiltenv import OBEAttrKey
 from locate_then_ask.ontobuiltenv.locate.attr import OBEAttrLocator
 from locate_then_ask.ontobuiltenv.model import OBEProperty
 from locate_then_ask.query_graph import QueryGraph
@@ -19,7 +20,7 @@ class OBENumOfHabitableRoomsLocator(OBEAttrLocator):
         )
 
         numofhabitableroom_node = "NumberOfHabitableRooms"
-        query_graph.add_literal_node(numofhabitableroom_node)
+        query_graph.add_literal_node(numofhabitableroom_node, key=OBEAttrKey.NUMBER_OF_HABITABLE_ROOMS)
 
         query_graph.add_func(
             target_node=numofhabitableroom_node,

@@ -2,6 +2,7 @@
 import copy
 import random
 
+from constants.ontobuiltenv import OBEAttrKey
 from locate_then_ask.ontobuiltenv.locate.attr import OBEAttrLocator
 from locate_then_ask.ontobuiltenv.model import OBEProperty
 from locate_then_ask.query_graph import QueryGraph
@@ -13,7 +14,7 @@ class OBEAddressLocator(OBEAttrLocator):
 
         query_graph = copy.deepcopy(query_graph)
 
-        address_node = query_graph.make_blank_node()
+        address_node = query_graph.make_blank_node(key=OBEAttrKey.ADDRESS)
         query_graph.add_triple("Property", "obe:hasAddress", address_node)
 
         sampling_frame = []

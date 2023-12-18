@@ -15,7 +15,7 @@ class OBEOmMeasureLocator:
             operator, value=measure.numerical_value
         )
 
-        measurevalue_node = query_graph.make_blank_node()
+        measurevalue_node = query_graph.make_blank_node(key=key)
         numval_node = key.value + "NumericalValue"
         query_graph.add_literal_node(numval_node)
 

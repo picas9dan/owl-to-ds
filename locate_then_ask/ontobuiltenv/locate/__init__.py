@@ -34,7 +34,7 @@ class OBELocator:
 
     def locate_concept_name(self, entity_iri: str):
         query_graph = QueryGraph()
-        query_graph.add_node("Property", iri=entity_iri, topic_entity=True)
+        query_graph.add_topic_node("Property", iri=entity_iri)
 
         entity = self.store.get(entity_iri)
         entity_cls = random.choice(entity.concepts)

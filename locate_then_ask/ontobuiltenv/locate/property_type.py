@@ -1,6 +1,7 @@
 import copy
 
 from constants.namespaces import OBE
+from constants.ontobuiltenv import OBEAttrKey
 from locate_then_ask.ontobuiltenv.locate.attr import OBEAttrLocator
 from locate_then_ask.ontobuiltenv.model import OBEProperty
 from locate_then_ask.query_graph import QueryGraph
@@ -14,7 +15,7 @@ class OBEPropertyTypeLocator(OBEAttrLocator):
         assert entity.property_type.startswith(OBE)
         clsname = entity.property_type[len(OBE):]
         clsname_node = "obe:" + clsname
-        query_graph.add_iri_node(clsname_node, prefixed=True)
+        query_graph.add_iri_node(clsname_node, prefixed=True, key=OBEAttrKey.PROPERTY_TYPE)
         query_graph.add_triple("Property", "obe:hasPropertyType/a", clsname_node)
 
         verbn = "property type is " + clsname

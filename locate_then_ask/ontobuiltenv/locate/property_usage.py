@@ -3,7 +3,7 @@ import random
 
 from constants.functions import NumOp
 from constants.namespaces import OBE
-from constants.ontobuiltenv import OBE_PROPERTYUSAGE_LABELS
+from constants.ontobuiltenv import OBE_PROPERTYUSAGE_LABELS, OBEAttrKey
 from locate_then_ask.ontobuiltenv.locate.attr import OBEAttrLocator
 from locate_then_ask.ontobuiltenv.model import OBEProperty
 from locate_then_ask.query_graph import QueryGraph
@@ -21,7 +21,7 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
             k=random.choice(range(1, len(entity.property_usage) + 1)),
         )
         for use in samples:
-            usage_node = query_graph.make_blank_node()
+            usage_node = query_graph.make_blank_node(key=OBEAttrKey.PROPERTY_USAGE)
             assert use.concept.startswith(OBE), use.concept
             clsname = use.concept[len(OBE) :]
             clsname_node = "obe:" + clsname
