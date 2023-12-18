@@ -34,22 +34,22 @@ class OBELocator:
 
     def locate_concept_name(self, entity_iri: str):
         query_graph = QueryGraph()
-        query_graph.add_node("Property", iri=entity_iri)
+        query_graph.add_node("Property", iri=entity_iri, topic_entity=True)
 
         entity = self.store.get(entity_iri)
         entity_cls = random.choice(entity.concepts)
         if entity_cls == DABGEO + "Building":
-            query_graph.add_node("dabgeo:Building", template_node=True, prefixed=True)
+            query_graph.add_node("dabgeo:Building", iri="dabgeo:Building", template_node=True, prefixed=True)
             query_graph.add_edge("Property", "dabgeo:Building", label="a")
 
             verbalization = "building"
         elif entity_cls == OBE + "Flat":
-            query_graph.add_node("obe:Flat", template_node=True, prefixed=True)
+            query_graph.add_node("obe:Flat", iri="obe:Flat", template_node=True, prefixed=True)
             query_graph.add_edge("Property", "obe:Flat", label="a")
 
             verbalization = "flat"
         elif entity_cls == OBE + "Property":
-            query_graph.add_node("obe:Property", template_node=True, prefixed=True)
+            query_graph.add_node("obe:Property", iri="obe:Property", template_node=True, prefixed=True)
             query_graph.add_edge("Property", "obe:Property", label="a/rdfs:subClassOf*")
 
             verbalization = "property"

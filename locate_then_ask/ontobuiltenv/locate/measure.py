@@ -30,7 +30,7 @@ class OBEOmMeasureLocator:
         query_graph.add_nodes_from(
             [
                 (attrval_node, dict()),
-                (numval_node, dict(template_node=True)),
+                (numval_node, dict()),
                 (
                     func_node,
                     dict(
@@ -41,7 +41,7 @@ class OBEOmMeasureLocator:
                         label=func_label,
                     ),
                 ),
-                (unit_node, dict(template_node=True)),
+                (unit_node, dict(iri=unit_node, template_node=True)),
             ]
         )
         query_graph.add_edges_from(

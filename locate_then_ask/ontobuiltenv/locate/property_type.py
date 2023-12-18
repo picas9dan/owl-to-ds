@@ -15,7 +15,7 @@ class OBEPropertyTypeLocator(OBEAttrLocator):
         clsname = entity.property_type[len(OBE):]
         clsname_node = "obe:" + clsname
         query_graph.add_node(
-            clsname_node, prefixed=True, template_node=True
+            clsname_node, iri=clsname_node, prefixed=True, template_node=True
         )
         query_graph.add_edge(
             "Property", clsname_node, label="obe:hasPropertyType/a"

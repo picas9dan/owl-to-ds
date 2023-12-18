@@ -29,7 +29,7 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
             query_graph.add_nodes_from(
                 [
                     (use_node, dict()),
-                    (clsname_node, dict(template_node=True, prefixed=True)),
+                    (clsname_node, dict(iri=clsname_node, template_node=True, prefixed=True)),
                 ]
             )
             query_graph.add_edges_from(

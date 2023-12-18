@@ -1,6 +1,6 @@
 from typing import List
 import networkx as nx
-from constants.functions import OSNumOp, StrOp
+from constants.functions import NumOp, OSNumOp, StrOp
 
 from locate_then_ask.query_graph import QueryGraph
 
@@ -12,17 +12,15 @@ class Graph2Sparql:
         )
 
     def _resolve_node_to_sparql(self, query_graph: QueryGraph, n: str):
-        if query_graph.nodes[n].get("template_node"):
-            if query_graph.nodes[n].get("topic_entity"):
-                return "?" + n
-            elif query_graph.nodes[n].get("literal"):
-                return '"{label}"'.format(label=query_graph.nodes[n]["label"])
-            elif not query_graph.nodes[n].get("prefixed"):
-                return "<{iri}>".format(iri=query_graph.nodes[n]["iri"])
-            else:
-                return query_graph.nodes[n]["iri"]
-        else:
+        if not query_graph.nodes[n].get("template_node"):
             return "?" + n
+        
+        if query_graph.nodes[n].get("literal"):
+            return '"{label}"'.format(label=query_graph.nodes[n]["label"])
+        elif query_graph.nodes[n].get("prefixed"):
+            return query_graph.nodes[n]["iri"]
+        else:
+            return "<{iri}>".format(iri=query_graph.nodes[n]["iri"])
 
     def _make_numerical_operator_pattern(self, query_graph: QueryGraph, s: str, o: str):
         operand_left = "?" + s
@@ -35,6 +33,11 @@ class Graph2Sparql:
             OSNumOp.LESS_THAN_EQUAL,
             OSNumOp.GREATER_THAN_EQUAL,
             OSNumOp.EQUAL,
+            NumOp.LESS_THAN,
+            NumOp.GREATER_THAN,
+            NumOp.LESS_THAN_EQUAL,
+            NumOp.GREATER_THAN_EQUAL,
+            NumOp.EQUAL
         ]:
             return "FILTER ( {left} {op} {right} )".format(
                 left=operand_left, op=operator, right=operand_right
@@ -87,7 +90,7 @@ class Graph2Sparql:
 
         if p == "func":
             operator = query_graph.nodes[o]["operator"]
-            if isinstance(operator, OSNumOp):
+            if isinstance(operator, OSNumOp) or isinstance(operator, NumOp):
                 return self._make_numerical_operator_pattern(query_graph, s, o)
             elif isinstance(operator, StrOp):
                 return self._make_string_operator_pattern(query_graph, s, o)
