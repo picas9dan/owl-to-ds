@@ -41,7 +41,7 @@ class OBEOmMeasureLocator:
                         label=func_label,
                     ),
                 ),
-                (unit_node, dict(iri=unit_node, template_node=True)),
+                (unit_node, dict(iri=unit_node, prefixed=True, template_node=True)),
             ]
         )
         query_graph.add_edges_from(

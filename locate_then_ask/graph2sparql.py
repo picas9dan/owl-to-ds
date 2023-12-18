@@ -40,7 +40,7 @@ class Graph2Sparql:
             NumOp.EQUAL
         ]:
             return "FILTER ( {left} {op} {right} )".format(
-                left=operand_left, op=operator, right=operand_right
+                left=operand_left, op=operator.value, right=operand_right
             )
         elif operator == OSNumOp.INSIDE_RANGE:
             assert isinstance(operand_right, tuple)
