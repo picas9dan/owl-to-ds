@@ -13,9 +13,7 @@ class OBEAddressLocator(OBEAttrLocator):
 
         query_graph = copy.deepcopy(query_graph)
 
-        bn_num = sum(n.startswith("BN_") for n in query_graph.nodes())
-        bn = "BN_" + str(bn_num)
-        query_graph.add_node(bn, blank_node=True)
+        bn = query_graph.make_blank_node()
         query_graph.add_edge("Property", bn, label="obe:hasAddress")
 
         sampling_frame = []

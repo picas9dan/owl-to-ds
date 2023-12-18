@@ -21,18 +21,12 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
             k=random.choice(range(1, len(entity.property_usage) + 1)),
         )
         for use in samples:
-            bn_num = sum(n.startswith("BN_") for n in query_graph.nodes())
-            bn = "BN_" + str(bn_num)
+            bn = query_graph.make_blank_node()
             assert use.concept.startswith(OBE), use.concept
             clsname = use.concept[len(OBE) :]
             clsname_node = "obe:" + clsname
 
-            query_graph.add_nodes_from(
-                [
-                    (bn, dict(blank_node=True)),
-                    (clsname_node, dict(iri=clsname_node, template_node=True, prefixed=True)),
-                ]
-            )
+            query_graph.add_node(clsname_node, iri=clsname_node, template_node=True, prefixed=True)
             query_graph.add_edges_from(
                 [
                     ("Property", bn, dict(label="obe:hasPropertyUsage")),

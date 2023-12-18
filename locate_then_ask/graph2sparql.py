@@ -85,7 +85,7 @@ class Graph2Sparql:
             raise ValueError("Unrecognized string operator: " + operator)
 
     def make_graph_pattern(self, query_graph: QueryGraph, s: str, o: str):
-        assert not s.startswith("BN_")
+        assert not QueryGraph.is_blank_node(s)
 
         s_sparql = self._resolve_node_to_sparql(query_graph, s)
         p = query_graph.edges[s, o]["label"]
@@ -136,7 +136,7 @@ class Graph2Sparql:
             )
 
         for s, o in nx.edge_dfs(query_graph, topic_node):
-            if not s.startswith("BN_"):
+            if not QueryGraph.is_blank_node(s):
                 graph_patterns.append(self.make_graph_pattern(query_graph, s, o))
 
         return "WHERE {{\n  {group_graph_pattern}\n}}".format(
