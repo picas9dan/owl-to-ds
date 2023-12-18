@@ -45,6 +45,9 @@ class QueryGraph(nx.DiGraph):
         self.add_node(n, blank_node=True)
 
         return n
+    
+    def add_iri_node(self, iri: str, prefixed: bool):
+        self.add_node(iri, iri=iri, template_node=True, prefixed=prefixed)
 
     def add_triple(self, s: str, p: str, o: str):
         self.add_edge(s, o, label=p)

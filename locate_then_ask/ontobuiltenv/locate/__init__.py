@@ -39,17 +39,17 @@ class OBELocator:
         entity = self.store.get(entity_iri)
         entity_cls = random.choice(entity.concepts)
         if entity_cls == DABGEO + "Building":
-            query_graph.add_node("dabgeo:Building", iri="dabgeo:Building", template_node=True, prefixed=True)
+            query_graph.add_iri_node("dabgeo:Building", prefixed=True)
             query_graph.add_triple("Property", "a", "dabgeo:Building")
 
             verbalization = "building"
         elif entity_cls == OBE + "Flat":
-            query_graph.add_node("obe:Flat", iri="obe:Flat", template_node=True, prefixed=True)
+            query_graph.add_iri_node("obe:Flat", prefixed=True)
             query_graph.add_triple("Property", "a", "obe:Flat")
 
             verbalization = "flat"
         elif entity_cls == OBE + "Property":
-            query_graph.add_node("obe:Property", iri="obe:Property", template_node=True, prefixed=True)
+            query_graph.add_iri_node("obe:Property", prefixed=True)
             query_graph.add_triple("Property", "a/rdfs:subClassOf*", "obe:Property")
 
             verbalization = "property"

@@ -14,9 +14,7 @@ class OBEPropertyTypeLocator(OBEAttrLocator):
         assert entity.property_type.startswith(OBE)
         clsname = entity.property_type[len(OBE):]
         clsname_node = "obe:" + clsname
-        query_graph.add_node(
-            clsname_node, iri=clsname_node, prefixed=True, template_node=True
-        )
+        query_graph.add_iri_node(clsname_node, prefixed=True)
         query_graph.add_triple("Property", "obe:hasPropertyType/a", clsname_node)
 
         verbn = "property type is " + clsname

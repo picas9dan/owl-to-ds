@@ -26,9 +26,7 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
             clsname = use.concept[len(OBE) :]
             clsname_node = "obe:" + clsname
 
-            query_graph.add_node(
-                clsname_node, iri=clsname_node, template_node=True, prefixed=True
-            )
+            query_graph.add_iri_node(clsname_node, prefixed=True)
             query_graph.add_triples(
                 [
                     ("Property", "obe:hasPropertyUsage", usage_node),

@@ -13,7 +13,7 @@ class OBEBuiltFormLocator(OBEAttrLocator):
         assert entity.built_form.startswith(OBE), entity.built_form
         clsname = entity.built_form[len(OBE) :]
         clsname_node = "obe:" + clsname
-        query_graph.add_node(clsname_node, iri=clsname_node, prefixed=True, template_node=True)
+        query_graph.add_iri_node(clsname_node, prefixed=True)
         query_graph.add_triple("Property", "obe:hasBuiltForm/a", clsname_node)
 
         verbn = "built form is " + clsname

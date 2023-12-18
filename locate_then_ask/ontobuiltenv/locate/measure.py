@@ -26,22 +26,16 @@ class OBEOmMeasureLocator:
         assert measure.unit_iri.startswith(OM), measure.unit_iri
         unit = measure.unit_iri[len(OM) :]
         unit_node = "om:" + unit
+        query_graph.add_iri_node(unit_node, prefixed=True)
         unit_verbn = random.choice(OM_KEY_LABELS[unit])
 
-        query_graph.add_nodes_from(
-            [
-                (
-                    func_node,
-                    dict(
-                        func=True,
-                        template_node=True,
-                        operator=operator,
-                        operand=operand,
-                        label=func_label,
-                    ),
-                ),
-                (unit_node, dict(iri=unit_node, prefixed=True, template_node=True)),
-            ]
+        query_graph.add_node(
+            func_node,
+            func=True,
+            template_node=True,
+            operator=operator,
+            operand=operand,
+            label=func_label,
         )
         query_graph.add_triples(
             [
