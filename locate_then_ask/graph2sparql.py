@@ -14,7 +14,7 @@ class Graph2Sparql:
     def _resolve_node_to_sparql(self, query_graph: QueryGraph, n: str):
         if not query_graph.nodes[n].get("template_node"):
             return "?" + n
-        
+
         if query_graph.nodes[n].get("literal"):
             return '"{label}"'.format(label=query_graph.nodes[n]["label"])
         elif query_graph.nodes[n].get("prefixed"):
@@ -37,7 +37,7 @@ class Graph2Sparql:
             NumOp.GREATER_THAN,
             NumOp.LESS_THAN_EQUAL,
             NumOp.GREATER_THAN_EQUAL,
-            NumOp.EQUAL
+            NumOp.EQUAL,
         ]:
             return "FILTER ( {left} {op} {right} )".format(
                 left=operand_left, op=operator.value, right=operand_right
@@ -85,6 +85,8 @@ class Graph2Sparql:
             raise ValueError("Unrecognized string operator: " + operator)
 
     def make_graph_pattern(self, query_graph: QueryGraph, s: str, o: str):
+        assert not s.startswith("BN_")
+
         s_sparql = self._resolve_node_to_sparql(query_graph, s)
         p = query_graph.edges[s, o]["label"]
 
@@ -96,7 +98,14 @@ class Graph2Sparql:
                 return self._make_string_operator_pattern(query_graph, s, o)
             else:
                 raise ValueError("Unexpected operator: " + str(operator))
-        if (
+        if query_graph.nodes[o].get("blank_node"):
+            p_sparql = p
+            tails = " ; ".join([
+                "{p} {o}".format(p=_p, o=self._resolve_node_to_sparql(query_graph, n=_o))
+                for _, _o, _p in query_graph.out_edges(o, data="label")
+            ])
+            o_sparql = "[ {tails} ]".format(tails=tails)
+        elif (
             query_graph.nodes[o].get("template_node")
             and p in self.predicates_to_entities_linked_by_rdfslabel
         ):
@@ -127,7 +136,8 @@ class Graph2Sparql:
             )
 
         for s, o in nx.edge_dfs(query_graph, topic_node):
-            graph_patterns.append(self.make_graph_pattern(query_graph, s, o))
+            if not s.startswith("BN_"):
+                graph_patterns.append(self.make_graph_pattern(query_graph, s, o))
 
         return "WHERE {{\n  {group_graph_pattern}\n}}".format(
             group_graph_pattern="\n  ".join(graph_patterns)
