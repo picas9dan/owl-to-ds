@@ -58,23 +58,11 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
 
                 usageshare_node = clsname + "UsageShare"
                 query_graph.add_literal_node(usageshare_node)
-                func_num = sum(n.startswith("Func_") for n in query_graph.nodes())
-                func_node = "Func_" + str(func_num)
-                func_label = operator.value + "\n" + str(operand)
-
-                query_graph.add_node(
-                    func_node,
-                    func=True,
-                    template_node=True,
+                query_graph.add_triple(usage_node, "obe:hasUsageShare", usageshare_node)
+                query_graph.add_func(
+                    target_node=usageshare_node,
                     operator=operator,
-                    operand=operand,
-                    label=func_label,
-                )
-                query_graph.add_triples(
-                    [
-                        (usage_node, "obe:hasUsageShare", usageshare_node),
-                        (usageshare_node, "func", func_node),
-                    ]
+                    operand=operand
                 )
 
                 verbn = verbn + " for " + verbn_numop

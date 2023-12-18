@@ -20,25 +20,14 @@ class OBENumOfHabitableRoomsLocator(OBEAttrLocator):
 
         numofhabitableroom_node = "NumberOfHabitableRooms"
         query_graph.add_literal_node(numofhabitableroom_node)
-        func_num = sum(n.startswith("Func_") for n in query_graph.nodes())
-        func_node = "Func_" + str(func_num)
-        func_label = operator.value + "\n" + str(operand)
 
-        query_graph.add_node(
-            func_node,
-            func=True,
-            template_node=True,
+        query_graph.add_func(
+            target_node=numofhabitableroom_node,
             operator=operator,
-            operand=operand,
-            label=func_label,
+            operand=operand
         )
-        query_graph.add_triples(
-            [
-                ("Property", "obe:hasNumberOfHabitableRooms", numofhabitableroom_node),
-                (numofhabitableroom_node, "func", func_node),
-            ]
-        )
-
+        query_graph.add_triple("Property", "obe:hasNumberOfHabitableRooms", numofhabitableroom_node)
+        
         verbn = "number of habitable room is " + verbn
 
         return query_graph, verbn

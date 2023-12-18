@@ -19,23 +19,16 @@ class OBEOmMeasureLocator:
         numval_node = key.value + "NumericalValue"
         query_graph.add_literal_node(numval_node)
 
-        func_num = sum(n.startswith("Func_") for n in query_graph.nodes())
-        func_node = "Func_" + str(func_num)
-        func_label = operator.value + "\n" + str(operand)
-
         assert measure.unit_iri.startswith(OM), measure.unit_iri
         unit = measure.unit_iri[len(OM) :]
         unit_node = "om:" + unit
         query_graph.add_iri_node(unit_node, prefixed=True)
         unit_verbn = random.choice(OM_KEY_LABELS[unit])
 
-        query_graph.add_node(
-            func_node,
-            func=True,
-            template_node=True,
+        query_graph.add_func(
+            target_node=numval_node,
             operator=operator,
-            operand=operand,
-            label=func_label,
+            operand=operand
         )
         query_graph.add_triples(
             [
@@ -45,7 +38,6 @@ class OBEOmMeasureLocator:
                     measurevalue_node,
                 ),
                 (measurevalue_node, "om:hasNumericalValue", numval_node),
-                (numval_node, "func", func_node),
                 (measurevalue_node, "om:hasUnit", unit_node),
             ]
         )
