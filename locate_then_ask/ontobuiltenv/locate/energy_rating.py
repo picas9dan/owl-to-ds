@@ -10,11 +10,7 @@ class OBEEnergyRatingLocator(OBEAttrLocator):
         assert entity.energy_rating is not None
         query_graph = copy.deepcopy(query_graph)
 
-        literal_num = sum(n.startswith("Literal_") for n in query_graph.nodes())
-        literal_node = "Literal_" + str(literal_num)
-        query_graph.add_node(
-            literal_node, label=entity.energy_rating, template_node=True, literal=True
-        )
+        literal_node = query_graph.make_literal_node(entity.energy_rating)
         query_graph.add_edge("Property", literal_node, label="obe:hasEnergyRating")
 
         verbn = "energy rating is [{label}]".format(label=entity.energy_rating)

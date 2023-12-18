@@ -27,19 +27,12 @@ class OBEAddressLocator(OBEAttrLocator):
         assert len(sampling_frame) > 0
 
         sampled = random.choice(sampling_frame)
-        literal_num = sum(n.startswith("Literal_") for n in query_graph.nodes())
         if sampled == "postal_code":
             assert entity.address.postal_code is not None
 
-            literal_node = "Literal_" + str(literal_num)
-            query_graph.add_node(
-                literal_node,
-                literal=True,
-                template_node=True,
-                label=entity.address.postal_code,
-            )
+            postalcode_node = query_graph.make_literal_node(entity.address.postal_code)
             query_graph.add_edge(
-                bn, literal_node, label="obe:hasPostalCode/rdfs:label"
+                bn, postalcode_node, label="obe:hasPostalCode/rdfs:label"
             )
 
             verbn = "the postal code [{code}]".format(code=entity.address.postal_code)
@@ -47,28 +40,8 @@ class OBEAddressLocator(OBEAttrLocator):
             assert entity.address.street is not None
             assert entity.address.street_number is not None
 
-            street_node = "Literal_" + str(literal_num)
-            streetnum_node = "Literal_" + str(literal_num + 1)
-            query_graph.add_nodes_from(
-                [
-                    (
-                        streetnum_node,
-                        dict(
-                            literal=True,
-                            template_node=True,
-                            label=entity.address.street_number,
-                        ),
-                    ),
-                    (
-                        street_node,
-                        dict(
-                            literal=True,
-                            template_node=True,
-                            label=entity.address.street,
-                        ),
-                    ),
-                ]
-            )
+            street_node = query_graph.make_literal_node(entity.address.street)
+            streetnum_node = query_graph.make_literal_node(entity.address.street_number)
             query_graph.add_edges_from(
                 [
                     (bn, streetnum_node, dict(label="ict:hasStreetNumber")),

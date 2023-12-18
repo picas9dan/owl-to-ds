@@ -1,6 +1,10 @@
+from decimal import Decimal
+from typing import Optional, Union
 import networkx as nx
 
 class QueryGraph(nx.DiGraph):
+    _LITERAL_PREFIX = "Literal_"
+
     def get_preds(self, subj: str):
         return [p for u, _, p in self.edges(data="label") if u == subj]
 
@@ -10,3 +14,13 @@ class QueryGraph(nx.DiGraph):
             for u, v, label in self.edges(data="label")
             if u == subj and label == predicate
         ]
+
+    def make_literal_node(self, value: Optional[Union[str, Decimal]] = None):
+        """Adds a literal node to the graph and returns the node"""
+        literal_num = sum(n.startswith(self._LITERAL_PREFIX) for n in self.nodes())
+        n = self._LITERAL_PREFIX + str(literal_num)
+
+        self.add_node(n, literal=True, template_node=value is not None, label=value)
+
+        return n
+        
