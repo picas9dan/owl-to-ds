@@ -14,7 +14,7 @@ class OBEAsker:
         query_graph.nodes["Property"]["question_node"] = True
 
         query_sparql = self.graph2sparql.convert(query_graph)
-        verbalization = "What are " + verbalization
+        verbalization = "What is the " + verbalization
 
         return AskDatum(
             query_graph=query_graph,

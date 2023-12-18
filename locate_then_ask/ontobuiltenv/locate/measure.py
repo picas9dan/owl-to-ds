@@ -15,7 +15,8 @@ class OBEOmMeasureLocator:
             operator, value=measure.numerical_value
         )
 
-        attrval_node = key.value + "Value"
+        bn_num = sum(n.startswith("BN_") for n in query_graph.nodes())
+        bn = "BN_" + str(bn_num)
         numval_node = key.value + "NumericalValue"
 
         func_num = sum(n.startswith("Func_") for n in query_graph.nodes())
@@ -29,8 +30,8 @@ class OBEOmMeasureLocator:
 
         query_graph.add_nodes_from(
             [
-                (attrval_node, dict()),
-                (numval_node, dict()),
+                (bn, dict(blank_node=True)),
+                (numval_node, dict(literal=True)),
                 (
                     func_node,
                     dict(
@@ -48,12 +49,12 @@ class OBEOmMeasureLocator:
             [
                 (
                     "Property",
-                    attrval_node,
+                    bn,
                     dict(label="obe:has{key}/om:hasValue".format(key=key.value)),
                 ),
-                (attrval_node, numval_node, dict(label="om:hasNumericalValue")),
+                (bn, numval_node, dict(label="om:hasNumericalValue")),
                 (numval_node, func_node, dict(label="func")),
-                (attrval_node, unit_node, dict(label="om:hasUnit")),
+                (bn, unit_node, dict(label="om:hasUnit")),
             ]
         )
 

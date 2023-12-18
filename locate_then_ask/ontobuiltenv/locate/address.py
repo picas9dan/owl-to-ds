@@ -12,8 +12,11 @@ class OBEAddressLocator(OBEAttrLocator):
         assert entity.address is not None
 
         query_graph = copy.deepcopy(query_graph)
-        query_graph.add_node("Address")
-        query_graph.add_edge("Property", "Address", label="obe:hasAddress")
+
+        bn_num = sum(n.startswith("BN_") for n in query_graph.nodes())
+        bn = "BN_" + str(bn_num)
+        query_graph.add_node(bn, blank_node=True)
+        query_graph.add_edge("Property", bn, label="obe:hasAddress")
 
         sampling_frame = []
         if entity.address.postal_code is not None:
@@ -36,7 +39,7 @@ class OBEAddressLocator(OBEAttrLocator):
                 label=entity.address.postal_code,
             )
             query_graph.add_edge(
-                "Address", literal_node, label="obe:hasPostalCode/rdfs:label"
+                bn, literal_node, label="obe:hasPostalCode/rdfs:label"
             )
 
             verbn = "the postal code [{code}]".format(code=entity.address.postal_code)
@@ -68,8 +71,8 @@ class OBEAddressLocator(OBEAttrLocator):
             )
             query_graph.add_edges_from(
                 [
-                    ("Address", streetnum_node, dict(label="ict:hasStreetNumber")),
-                    ("Address", street_node, dict(label="ict:hasStreet")),
+                    (bn, streetnum_node, dict(label="ict:hasStreetNumber")),
+                    (bn, street_node, dict(label="ict:hasStreet")),
                 ]
             )
 
