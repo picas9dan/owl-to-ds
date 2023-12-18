@@ -13,8 +13,8 @@ class OBEAddressLocator(OBEAttrLocator):
 
         query_graph = copy.deepcopy(query_graph)
 
-        bn = query_graph.make_blank_node()
-        query_graph.add_edge("Property", bn, label="obe:hasAddress")
+        address_node = query_graph.make_blank_node()
+        query_graph.add_triple("Property", "obe:hasAddress", address_node)
 
         sampling_frame = []
         if entity.address.postal_code is not None:
@@ -29,9 +29,7 @@ class OBEAddressLocator(OBEAttrLocator):
             assert entity.address.postal_code is not None
 
             postalcode_node = query_graph.make_literal_node(entity.address.postal_code)
-            query_graph.add_edge(
-                bn, postalcode_node, label="obe:hasPostalCode/rdfs:label"
-            )
+            query_graph.add_triple(address_node, "obe:hasPostalCode/rdfs:label", postalcode_node)
 
             verbn = "the postal code [{code}]".format(code=entity.address.postal_code)
         elif sampled == "street_addr":
@@ -40,12 +38,10 @@ class OBEAddressLocator(OBEAttrLocator):
 
             street_node = query_graph.make_literal_node(entity.address.street)
             streetnum_node = query_graph.make_literal_node(entity.address.street_number)
-            query_graph.add_edges_from(
-                [
-                    (bn, streetnum_node, dict(label="ict:hasStreetNumber")),
-                    (bn, street_node, dict(label="ict:hasStreet")),
-                ]
-            )
+            query_graph.add_triples([
+                (address_node, "ict:hasStreetNumber", streetnum_node),
+                (address_node, "ict:hasStreet", street_node)
+            ])
 
             verbn = "[{number} {street}]".format(
                 number=entity.address.street_number, street=entity.address.street

@@ -17,9 +17,7 @@ class OBEPropertyTypeLocator(OBEAttrLocator):
         query_graph.add_node(
             clsname_node, iri=clsname_node, prefixed=True, template_node=True
         )
-        query_graph.add_edge(
-            "Property", clsname_node, label="obe:hasPropertyType/a"
-        )
+        query_graph.add_triple("Property", "obe:hasPropertyType/a", clsname_node)
 
         verbn = "property type is " + clsname
 

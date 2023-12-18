@@ -21,16 +21,18 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
             k=random.choice(range(1, len(entity.property_usage) + 1)),
         )
         for use in samples:
-            bn = query_graph.make_blank_node()
+            usage_node = query_graph.make_blank_node()
             assert use.concept.startswith(OBE), use.concept
             clsname = use.concept[len(OBE) :]
             clsname_node = "obe:" + clsname
 
-            query_graph.add_node(clsname_node, iri=clsname_node, template_node=True, prefixed=True)
-            query_graph.add_edges_from(
+            query_graph.add_node(
+                clsname_node, iri=clsname_node, template_node=True, prefixed=True
+            )
+            query_graph.add_triples(
                 [
-                    ("Property", bn, dict(label="obe:hasPropertyUsage")),
-                    (bn, clsname_node, dict(label="a/rdfs:subClassOf*")),
+                    ("Property", "obe:hasPropertyUsage", usage_node),
+                    (usage_node, "a/rdfs:subClassOf*", clsname_node),
                 ]
             )
 
@@ -56,32 +58,27 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
                 verbn_numop = verbn_numop.replace(str(operand), share_pctg_str)
                 operand = operand / 100
 
-                literal_node = clsname + "UsageShare"
+                usageshare_node = clsname + "UsageShare"
+                query_graph.add_literal_node(usageshare_node)
                 func_num = sum(n.startswith("Func_") for n in query_graph.nodes())
                 func_node = "Func_" + str(func_num)
                 func_label = operator.value + "\n" + str(operand)
 
-                query_graph.add_nodes_from(
+                query_graph.add_node(
+                    func_node,
+                    func=True,
+                    template_node=True,
+                    operator=operator,
+                    operand=operand,
+                    label=func_label,
+                )
+                query_graph.add_triples(
                     [
-                        (literal_node, dict(literal=True)),
-                        (
-                            func_node,
-                            dict(
-                                func=True,
-                                template_node=True,
-                                operator=operator,
-                                operand=operand,
-                                label=func_label,
-                            ),
-                        ),
+                        (usage_node, "obe:hasUsageShare", usageshare_node),
+                        (usageshare_node, "func", func_node),
                     ]
                 )
-                query_graph.add_edges_from(
-                    [
-                        (bn, literal_node, dict(label="obe:hasUsageShare")),
-                        (literal_node, func_node, dict(label="func")),
-                    ]
-                )
+
                 verbn = verbn + " for " + verbn_numop
 
             verbns.append(verbn)
