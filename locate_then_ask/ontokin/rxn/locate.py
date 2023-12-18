@@ -7,7 +7,7 @@ from locate_then_ask.ontokin.model import (
     OKMechanism,
     OKSpecies,
 )
-from locate_then_ask.query_graph import QueryGraph, get_objs
+from locate_then_ask.query_graph import QueryGraph
 
 
 class OKReactionLocator:
@@ -174,8 +174,7 @@ class OKReactionLocator:
 
         sampling_frame = unsampled_reactant_iris + unsampled_product_iris
 
-        sampled_mechanism_nodes = get_objs(
-            query_graph,
+        sampled_mechanism_nodes = query_graph.get_objs(
             subj="Reaction",
             predicate="^okin:hasReaction",
         )

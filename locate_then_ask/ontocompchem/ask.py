@@ -5,7 +5,7 @@ from constants.nl import PLURAL_ADJS
 from constants.ontocompchem import OCC_RESULT_KEYS, OCC_RESULT_LABELS
 from locate_then_ask.data_model import AskDatum
 from locate_then_ask.ontocompchem.graph2sparql import OCCGraph2Sparql
-from locate_then_ask.query_graph import QueryGraph, get_objs
+from locate_then_ask.query_graph import QueryGraph
 
 
 class OCCAsker:
@@ -32,16 +32,14 @@ class OCCAsker:
             )
 
         comp_params = []
-        lots = get_objs(
-            query_graph=query_graph,
+        lots = query_graph.get_objs(
             subj="MolecularComputation",
             predicate="occ:hasMethodology/occ:hasLevelOfTheory/rdfs:label",
         )
         if random.getrandbits(1) and len(lots) == 0:
             comp_params.append("LevelOfTheory")
 
-        bss = get_objs(
-            query_graph=query_graph,
+        bss = query_graph.get_objs(
             subj="MolecularComputation",
             predicate="occ:hasMethodology/occ:hasBasisSet/rdfs:label",
         )

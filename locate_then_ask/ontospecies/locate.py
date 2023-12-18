@@ -8,7 +8,7 @@ from constants.functions import (
 )
 from constants.ontospecies import CHEMCLASS_KEY, KEY2LABELS, USE_KEY
 from locate_then_ask.ontospecies.entity_store import OSEntityStore
-from locate_then_ask.query_graph import QueryGraph, get_objs, get_preds
+from locate_then_ask.query_graph import QueryGraph
 from utils.numerical import NumGetter
 
 
@@ -71,21 +71,17 @@ class OSSpeciesLocator:
 
         sampled_keys = [
             x[len("os:has") :]
-            for x in get_preds(query_graph, subj="Species")
+            for x in query_graph.get_preds("Species")
             if x.startswith("os:has")
         ]
         unsampled_property_keys = [
             x for x in entity.key2property.keys() if x not in sampled_keys
         ]
 
-        sampled_uses = get_objs(
-            query_graph, subj="Species", predicate="os:hasUse/rdfs:label"
-        )
+        sampled_uses = query_graph.get_objs(subj="Species", predicate="os:hasUse/rdfs:label")
         unsampled_uses = [x for x in entity.uses if x not in sampled_uses]
 
-        sampled_chemclasses = get_objs(
-            query_graph, subj="Species", predicate="os:hasChemicalClass/rdfs:label"
-        )
+        sampled_chemclasses = query_graph.get_objs(subj="Species", predicate="os:hasChemicalClass/rdfs:label")
         unsampled_chemclasses = [
             x for x in entity.chemclasses if x not in sampled_chemclasses
         ]

@@ -14,7 +14,7 @@ from constants.ontospecies import (
 )
 from locate_then_ask.data_model import AskDatum
 from locate_then_ask.ontospecies.graph2sparql import OSGraph2Sparql
-from locate_then_ask.query_graph import QueryGraph, get_preds
+from locate_then_ask.query_graph import QueryGraph
 
 
 class OSAsker:
@@ -48,7 +48,7 @@ class OSAsker:
         if will_sample_concrete_attribute:
             sampled_keys = [
                 x[len("os:has") :]
-                for x in get_preds(query_graph, "Species")
+                for x in query_graph.get_preds("Species")
                 if x.startswith("os:has")
             ]
             key_sampling_frame = [

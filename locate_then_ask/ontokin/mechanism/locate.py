@@ -3,7 +3,7 @@ import random
 
 from locate_then_ask.ontokin.entity_store import OKEntityStore
 from locate_then_ask.ontokin.model import OKGasPhaseReaction, OKMechanism, OKSpecies
-from locate_then_ask.query_graph import QueryGraph, get_objs
+from locate_then_ask.query_graph import QueryGraph
 
 
 class OKMechanismLocator:
@@ -49,8 +49,7 @@ class OKMechanismLocator:
         entity = self.store.get(entity_iri)
         assert isinstance(entity, OKMechanism)
 
-        sampled_species_nodes = get_objs(
-            query_graph,
+        sampled_species_nodes = query_graph.get_objs(
             subj="Mechanism",
             predicate="okin:hasGasPhase/^okin:belongsToPhase",
         )
@@ -97,8 +96,7 @@ class OKMechanismLocator:
         entity = self.store.get(entity_iri)
         assert isinstance(entity, OKMechanism)
 
-        sampled_rxn_nodes = get_objs(
-            query_graph,
+        sampled_rxn_nodes = query_graph.get_objs(
             subj="Mechanism",
             predicate="okin:hasReaction",
         )

@@ -2,7 +2,7 @@ import copy
 from constants.ontobuiltenv import OBEAttrKey
 from locate_then_ask.data_model import AskDatum
 from locate_then_ask.graph2sparql import Graph2Sparql
-from locate_then_ask.query_graph import QueryGraph, get_preds
+from locate_then_ask.query_graph import QueryGraph
 
 
 class OBEAsker:
