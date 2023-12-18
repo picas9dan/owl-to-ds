@@ -1,5 +1,3 @@
-
-import copy
 import random
 
 from constants.ontobuiltenv import OBEAttrKey
@@ -10,9 +8,9 @@ from locate_then_ask.query_graph import QueryGraph
 
 class OBEAddressLocator(OBEAttrLocator):
     def locate(self, query_graph: QueryGraph, entity: OBEProperty):
+        """Locates the topic entity in the query_graph by its address.
+        The query_graph is modified in-place."""
         assert entity.address is not None
-
-        query_graph = copy.deepcopy(query_graph)
 
         address_node = query_graph.make_blank_node(key=OBEAttrKey.ADDRESS)
         query_graph.add_triple("Property", "obe:hasAddress", address_node)
@@ -50,4 +48,4 @@ class OBEAddressLocator(OBEAttrLocator):
 
         verbn = "addresss is at " + verbn
 
-        return query_graph, verbn
+        return verbn

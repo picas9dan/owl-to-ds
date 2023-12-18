@@ -1,4 +1,3 @@
-import copy
 import random
 
 from constants.functions import NumOp
@@ -13,7 +12,6 @@ from utils.numerical import make_operand_and_verbn
 class OBEPropertyUsageLocator(OBEAttrLocator):
     def locate(self, query_graph: QueryGraph, entity: OBEProperty):
         assert any(entity.property_usage)
-        query_graph = copy.deepcopy(query_graph)
 
         verbns = []
         samples = random.sample(
@@ -71,4 +69,4 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
 
         verbalization = "use is " + " and ".join(verbns)
 
-        return query_graph, verbalization
+        return verbalization

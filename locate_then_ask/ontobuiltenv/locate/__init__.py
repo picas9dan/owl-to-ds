@@ -65,7 +65,7 @@ class OBELocator:
         cond_verbns = []
         for k in random.sample(entity.get_nonnone_keys(), k=cond_num):
             attr_locator = self.attr_locators[k]
-            query_graph, cond_verbn = attr_locator.locate(query_graph, entity=entity)
+            cond_verbn = attr_locator.locate(query_graph, entity=entity)
             cond_verbns.append(cond_verbn)
 
         verbn = "{concept} whose {conds}".format(concept=concept, conds=" and ".join(cond_verbns))

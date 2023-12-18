@@ -1,5 +1,3 @@
-import copy
-
 from constants.namespaces import OBE
 from constants.ontobuiltenv import OBEAttrKey
 from locate_then_ask.ontobuiltenv.locate.attr import OBEAttrLocator
@@ -10,7 +8,6 @@ from locate_then_ask.query_graph import QueryGraph
 class OBEBuiltFormLocator(OBEAttrLocator):
     def locate(self, query_graph: QueryGraph, entity: OBEProperty):
         assert entity.built_form is not None
-        query_graph = copy.deepcopy(query_graph)
 
         assert entity.built_form.startswith(OBE), entity.built_form
         clsname = entity.built_form[len(OBE) :]
@@ -20,4 +17,4 @@ class OBEBuiltFormLocator(OBEAttrLocator):
 
         verbn = "built form is " + clsname
 
-        return query_graph, verbn
+        return verbn

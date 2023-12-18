@@ -12,17 +12,15 @@ class OBEAsker:
         self.graph2sparql = Graph2Sparql()
         
     def ask_name(self, query_graph: QueryGraph, verbalization: str):
-        query_graph = copy.deepcopy(query_graph)
         query_graph.nodes["Property"]["question_node"] = True
 
         query_sparql = self.graph2sparql.convert(query_graph)
         verbalization = "What is the " + verbalization
 
-        return AskDatum(
-            query_graph=query_graph,
-            query_sparql=query_sparql,
-            verbalization=verbalization,
-        )
+        return query_sparql, verbalization
+    
+    def ask_count(self, query_graph: QueryGraph, verbalization: str):
+        pass
 
 
     def ask_attrs(self, query_graph: QueryGraph, verbalization: str, attr_num: int = 1):
@@ -41,8 +39,4 @@ class OBEAsker:
         query_sparql = self.graph2sparql.convert(query_graph)
         verbalization = "What is the {attrs} of the {located}".format(attrs = " and ".join(verbns), located=verbalization)
 
-        return AskDatum(
-            query_graph=query_graph,
-            query_sparql=query_sparql,
-            verbalization=verbalization
-        )
+        return query_sparql, verbalization

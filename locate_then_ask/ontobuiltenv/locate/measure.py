@@ -1,4 +1,5 @@
 import random
+
 from constants.functions import NumOp
 from constants.namespaces import OM
 from constants.om import OM_KEY_LABELS
@@ -46,4 +47,4 @@ class OBEOmMeasureLocator:
             key=random.choice(OBE_ATTR_LABELS[key]), op=op_verbn, unit=unit_verbn
         )
 
-        return query_graph, verbn
+        return verbn
