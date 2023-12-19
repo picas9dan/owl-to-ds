@@ -19,7 +19,7 @@ class OBEAddressLocator(OBEAttrLocator):
         if entity.address.postal_code is not None:
             sampling_frame.append("postal_code")
         if entity.address.street is not None:
-            assert entity.address.street_number is not None
+            # assert entity.address.street_number is not None
             sampling_frame.append("street_addr")
         assert len(sampling_frame) > 0
 
@@ -33,18 +33,20 @@ class OBEAddressLocator(OBEAttrLocator):
             verbn = "the postal code [{code}]".format(code=entity.address.postal_code)
         elif sampled == "street_addr":
             assert entity.address.street is not None
-            assert entity.address.street_number is not None
+            # assert entity.address.street_number is not None
 
             street_node = query_graph.make_literal_node(entity.address.street)
-            streetnum_node = query_graph.make_literal_node(entity.address.street_number)
-            query_graph.add_triples([
-                (address_node, "ict:hasStreetNumber", streetnum_node),
-                (address_node, "ict:hasStreet", street_node)
-            ])
+            query_graph.add_triple(address_node, "ict:hasStreet", street_node)
 
-            verbn = "[{number} {street}]".format(
-                number=entity.address.street_number, street=entity.address.street
-            )
+            if entity.address.street_number is not None:
+                streetnum_node = query_graph.make_literal_node(entity.address.street_number)
+                query_graph.add_triple(address_node, "ict:hasStreetNumber", streetnum_node)
+                
+                verbn = "[{number} {street}]".format(
+                    number=entity.address.street_number, street=entity.address.street
+                )
+            else:
+                verbn = "[{street}]".format(street=entity.address.street)
 
         verbn = "addresss is at " + verbn
 

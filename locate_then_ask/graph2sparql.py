@@ -4,6 +4,7 @@ from constants.functions import NumOp, OSNumOp, StrOp
 
 from locate_then_ask.query_graph import QueryGraph
 
+QuerySparl = str
 
 class Graph2Sparql:
     def __init__(self, predicates_to_entities_linked_by_rdfslabel: List[str] = []):
@@ -161,8 +162,8 @@ class Graph2Sparql:
         select_clause = self.make_select_clause(query_graph)
         where_clause = self.make_where_clause(query_graph)
 
-        sparql_compact = "{SELECT} {WHERE}".format(
+        sparql = "{SELECT} {WHERE}".format(
             SELECT=select_clause, WHERE=where_clause
         )
 
-        return sparql_compact
+        return QuerySparl(sparql)

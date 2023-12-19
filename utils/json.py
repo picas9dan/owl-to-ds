@@ -1,12 +1,22 @@
+from decimal import Decimal
 import json
-from constants.functions import OSNumOp, StrOp
+
+from constants.functions import NumOp, OSNumOp, StrOp
+from constants.ontobuiltenv import OBEAttrKey
 
 
-PUBLIC_ENUMS = {"OSNumOp": OSNumOp, "StrOp": StrOp}
+PUBLIC_ENUMS = {
+    "OSNumOp": OSNumOp,
+    "StrOp": StrOp,
+    "NumOp": NumOp,
+    "OBEAttrKey": OBEAttrKey,
+}
 
 
 class EnumEncoder(json.JSONEncoder):
     def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
         if type(obj) in PUBLIC_ENUMS.values():
             return {"__enum__": str(obj)}
         return json.JSONEncoder.default(self, obj)

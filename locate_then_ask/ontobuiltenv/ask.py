@@ -1,4 +1,3 @@
-import copy
 import random
 
 from constants.ontobuiltenv import OBE_ATTR_LABELS, OBEAttrKey

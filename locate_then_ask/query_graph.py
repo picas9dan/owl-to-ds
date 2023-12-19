@@ -41,8 +41,8 @@ class QueryGraph(nx.DiGraph):
 
         return n
 
-    def add_literal_node(self, n: str):
-        self.add_node(n, literal=True)
+    def add_literal_node(self, n: str, key: Optional[Any] = None):
+        self.add_node(n, literal=True, key=key)
 
     def make_blank_node(self, key: Optional[Any] = None):
         """Adds a blank node to the graph and returns the node."""
