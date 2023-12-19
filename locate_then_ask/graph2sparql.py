@@ -151,7 +151,7 @@ class Graph2Sparql:
         ]
 
         def resolve_proj(n: str):
-            if query_graph.nodes[n].get("ask_count"):
+            if query_graph.nodes[n].get("count"):
                 return "(COUNT(?{n}) AS ?{n}Count)".format(n=n)
             return "?" + n
 

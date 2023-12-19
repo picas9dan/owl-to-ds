@@ -31,10 +31,6 @@ class QueryGraph(nx.DiGraph):
 
     def add_topic_node(self, n: str, iri: str):
         self.add_node(n, topic_entity=True, iri=iri)
-        setattr(self, self._TOPICNODE_ATTRNAME, n)
-
-    def get_topic_node(self):
-        return getattr(self, self._TOPICNODE_ATTRNAME)
 
     def make_literal_node(self, value: Union[str, Decimal], key: Optional[Any] = None):
         """Adds a grounded literal node to the graph and returns the node."""
@@ -75,8 +71,8 @@ class QueryGraph(nx.DiGraph):
         )
         self.add_edge(target_node, func_node, label="func")
 
-    def add_question_node(self, n: str):
-        self.add_node(n, question_node=True)
+    def add_question_node(self, n: str, count: bool = False):
+        self.add_node(n, question_node=True, count=count)
 
     def add_triple(self, s: str, p: str, o: str):
         self.add_edge(s, o, label=p)

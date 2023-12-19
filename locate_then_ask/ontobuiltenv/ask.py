@@ -2,7 +2,6 @@ import copy
 import random
 
 from constants.ontobuiltenv import OBE_ATTR_LABELS, OBEAttrKey
-from locate_then_ask.data_model import AskDatum
 from locate_then_ask.graph2sparql import Graph2Sparql
 from locate_then_ask.query_graph import QueryGraph
 
@@ -12,7 +11,7 @@ class OBEAsker:
         self.graph2sparql = Graph2Sparql()
         
     def ask_name(self, query_graph: QueryGraph, verbalization: str):
-        query_graph.nodes["Property"]["question_node"] = True
+        query_graph.add_question_node("Property")
 
         query_sparql = self.graph2sparql.convert(query_graph)
         verbalization = "What is the " + verbalization
@@ -20,11 +19,14 @@ class OBEAsker:
         return query_sparql, verbalization
     
     def ask_count(self, query_graph: QueryGraph, verbalization: str):
-        pass
+        query_graph.add_question_node("Property", count=True)
 
+        query_sparql = self.graph2sparql.convert(query_graph)
+        verbalization = "How many {located} are there?".format(located=verbalization)
+
+        return query_sparql, verbalization
 
     def ask_attrs(self, query_graph: QueryGraph, verbalization: str, attr_num: int = 1):
-        topic_node = query_graph.get_topic_node()
         sampled_attr_keys = tuple(key for _, key in query_graph.nodes(data="key") if key is not None)
         assert all(isinstance(key, OBEAttrKey) for key in sampled_attr_keys), sampled_attr_keys
 
@@ -32,7 +34,7 @@ class OBEAsker:
         verbns = []
         for key in random.sample(unsampled_attr_keys, k=attr_num):
             query_graph.add_question_node(key.value)
-            query_graph.add_triple(topic_node, "obe:has" + key.value, key.value)
+            query_graph.add_triple("Property", "obe:has" + key.value, key.value)
 
             verbns.append(random.choice(OBE_ATTR_LABELS[key]))
 

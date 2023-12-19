@@ -25,7 +25,7 @@ class OKSpeciesAsker:
     def ask_count(self, query_graph: QueryGraph, verbalization: str):
         query_graph = copy.deepcopy(query_graph)
         query_graph.nodes["Species"]["question_node"] = True
-        query_graph.nodes["Species"]["ask_count"] = True
+        query_graph.nodes["Species"]["count"] = True
 
         if verbalization.startswith("the"):
             verbalization = verbalization[len("the"): ].strip()

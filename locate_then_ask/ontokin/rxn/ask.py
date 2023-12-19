@@ -27,7 +27,7 @@ class OKReactionAsker:
 
         query_graph = copy.deepcopy(query_graph)
         query_graph.nodes["Reaction"]["question_node"] = True
-        query_graph.nodes["Reaction"]["ask_count"] = True
+        query_graph.nodes["Reaction"]["count"] = True
 
         if verbalization.startswith("the"):
             verbalization = verbalization[len("the") :].strip()
