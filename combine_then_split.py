@@ -2,8 +2,8 @@ import argparse
 import ast
 import json
 import os
-import random
 import time
+import numpy as np
 
 import pandas as pd
 
@@ -34,10 +34,7 @@ def main():
     args = parser.parse_args()
 
     df = pd.read_csv(args.filepath_paraphrases, index_col="id")
-    df["paraphrases"] = df["paraphrases"].apply(ast.literal_eval)
-    df["sampling_pool"] = df.apply(
-        lambda row: [row["verbalization"]] + row["paraphrases"], axis=1
-    )
+    df["paraphrases"] = df["paraphrases"].apply(ast.literal_eval).apply(lambda lst: [sanitize(x) for x in lst])
 
     with open(args.filepath_examples, "r") as f:
         data = json.load(f)
@@ -47,29 +44,38 @@ def main():
         try:
             if datum["id"] not in df.index:
                 continue
+
             row = df.loc[datum["id"]]
-            datum["paraphrases"] = row["paraphrases"]
-            datum["question"] = sanitize(random.choice(row["sampling_pool"]))
-            data_out.append(datum)
+            for i, paraphrase in enumerate(row["paraphrases"]):
+                data_out.append(dict(
+                    id="{id}_{i}".format(id=datum["id"], i=i),
+                    domain="ontobuiltenv",
+                    question=paraphrase,
+                    query=dict(
+                        sparql=datum["query"]["sparql"]
+                    )
+                ))
         except Exception as e:
             print(datum)
             raise e
 
-    ids = df.sample(frac=1).index.to_list()
-    test_size = len(ids) // 10
-    dev_size = len(ids) // 10
+    data_out = np.array(data_out)
+    np.random.shuffle(data_out)
+    idxes = list(range(len(data_out)))
+    test_size = len(idxes) // 10
+    dev_size = len(idxes) // 10
 
-    ids = {
-        "test": ids[:test_size],
-        "dev": ids[test_size : test_size + dev_size],
-        "train": ids[test_size + dev_size :],
+    split2idxes = {
+        "test": idxes[:test_size],
+        "dev": idxes[test_size : test_size + dev_size],
+        "train": idxes[test_size + dev_size :],
     }
 
     os.makedirs(args.dirpath_out, exist_ok=True)
 
     time_label = time.strftime("%Y-%m-%d_%H.%M.%S")
-    for split, _ids in ids.items():
-        split_data = [x for x in data_out if x["id"] in _ids]
+    for split, _idxes in split2idxes.items():
+        split_data = data_out[_idxes].tolist()
 
         filename = f"{time_label}_{split}.json"
         filepath = os.path.join(args.dirpath_out, filename)

@@ -105,6 +105,7 @@ LIMIT {num}"""
             
             example = dict(
                 id=i,
+                domain="ontobuiltenv",
                 verbalization=verbn,
                 query=dict(
                     sparql=query_sparql,
