@@ -63,7 +63,8 @@ class OBELocator:
         entity = self.store.get(entity_iri)
 
         cond_verbns = []
-        for k in random.sample(entity.get_nonnone_keys(), k=cond_num):
+        keys = entity.get_nonnone_keys()
+        for k in random.sample(keys, k=min(cond_num, len(keys))):
             attr_locator = self.attr_locators[k]
             cond_verbn = attr_locator.locate(query_graph, entity=entity)
             cond_verbns.append(cond_verbn)

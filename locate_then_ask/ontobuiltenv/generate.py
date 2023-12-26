@@ -7,6 +7,7 @@ from typing import List
 import networkx as nx
 from tqdm import tqdm
 from constants.fs import ROOTDIR
+from constants.ontobuiltenv import OBE_PROPERTYUSAGE_LABELS
 
 from locate_then_ask.ontobuiltenv.ask import OBEAsker
 from locate_then_ask.ontobuiltenv.locate import OBELocator
@@ -34,7 +35,7 @@ class OBEDatasetGenerator:
 PREFIX obe:       <https://www.theworldavatar.com/kg/ontobuiltenv/>
 
 SELECT DISTINCT ?x (COUNT(DISTINCT ?p) as ?degree) WHERE {{
-    ?x a {cls} .
+    ?x obe:hasPropertyUsage/a obe:{PropertyUsage} .
     ?x ?p ?o .
 }}
 GROUP BY ?x
@@ -43,9 +44,9 @@ LIMIT {num}"""
 
         iris: List[str] = []
 
-        for cls, num in [("obe:Property", 50), ("obe:Flat", 100), ("dabgeo:Building", 200)]:
+        for use in OBE_PROPERTYUSAGE_LABELS.keys():
             query = query_template.format(
-                cls=cls, num=num
+                PropertyUsage=use, num=34
             )
             bindings = kg_client.query(query)["results"]["bindings"]
             iris.extend([x["x"]["value"] for x in bindings])
@@ -79,7 +80,7 @@ LIMIT {num}"""
         examples = []
 
         for i, entity in enumerate(tqdm(self.seed_entities)):
-            locate_strategy = random.choice(list(self.LOCATE2ASK.keys()))
+            locate_strategy = random.sample(["concept_name", "concept_and_literal"], counts=[1, 99], k=1)[0]
 
             if locate_strategy == "concept_name":
                 query_graph, verbn = self.locator.locate_concept_name(entity)

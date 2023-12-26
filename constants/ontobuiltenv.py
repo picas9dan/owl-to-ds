@@ -42,6 +42,7 @@ OBE_PROPERTYUSAGE_LABELS = {
     "Education": ["education"],
     "School": ["school"],
     "University": ["university"],
+    "UniversityFacility": ["university"],
     "EatingEstablishment": ["eating establishment"],
     "RetailEstablishment": ["retail establishment"],
     "ReligiousFacility": ["religious facility"],
