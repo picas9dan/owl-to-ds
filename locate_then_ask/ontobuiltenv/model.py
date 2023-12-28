@@ -26,7 +26,7 @@ class OmMeasure:
 @dataclass(frozen=True)
 class OBEProperty:
     iri: str
-    concepts: Tuple[str, ...]                         # a/rdfs:subClassOf*
+    concept: str                                # a
     address: Optional[IctAddress]               # obe:hasAddress 0..1 
     built_form: Optional[str]                   # obe:hasBuiltForm/a 0..1
     # construction_component: List[str]           # obe:hasConstructionComponent 0..4
@@ -45,7 +45,7 @@ class OBEProperty:
     ground_elevation: Optional[OmMeasure]       # obe:hasGroundElevation/om:hasValue, only for dabgeo:Building
 
     def __post_init__(self):
-        object.__setattr__(self, "concepts", tuple(self.concepts))
+        object.__setattr__(self, "concepts", tuple(self.concept))
         object.__setattr__(self, "property_usage", tuple(self.property_usage))
 
     def get_nonnone_keys(self):

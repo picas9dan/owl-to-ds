@@ -37,24 +37,23 @@ class OBELocator:
         query_graph.add_topic_node("Property", iri=entity_iri)
 
         entity = self.store.get(entity_iri)
-        entity_cls = random.choice(entity.concepts)
-        if entity_cls == DABGEO + "Building":
+        if entity.concept == DABGEO + "Building":
             query_graph.add_iri_node("dabgeo:Building", prefixed=True)
             query_graph.add_triple("Property", "a", "dabgeo:Building")
 
             verbalization = "building"
-        elif entity_cls == OBE + "Flat":
+        elif entity.concept == OBE + "Flat":
             query_graph.add_iri_node("obe:Flat", prefixed=True)
             query_graph.add_triple("Property", "a", "obe:Flat")
 
             verbalization = "flat"
-        elif entity_cls == OBE + "Property":
+        elif entity.concept == OBE + "Property":
             query_graph.add_iri_node("obe:Property", prefixed=True)
             query_graph.add_triple("Property", "a/rdfs:subClassOf*", "obe:Property")
 
             verbalization = "property"
         else:
-            raise ValueError("Unexpeced type: " + entity_cls.__name__)
+            raise ValueError("Unexpeced type {type} for entity {iri}".format(type=entity.concept, iri=entity_iri))
 
         return query_graph, verbalization
 

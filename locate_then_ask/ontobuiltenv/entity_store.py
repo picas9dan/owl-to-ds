@@ -24,9 +24,7 @@ class OBEEntityStore:
         return self.iri2entity[entity_iri]
 
     def create(self, entity_iri: str):
-        concepts = self.retrieve_str_byPredicate(
-            entity_iri, predicate="a/rdfs:subClassOf*"
-        )
+        concept = self.retrieve_concept(entity_iri)
         address = self.retrieve_address(entity_iri)
         built_form = self.retrieve_str_byPredicate(
             entity_iri, predicate="obe:hasBuiltForm/a"
@@ -37,9 +35,7 @@ class OBEEntityStore:
         number_of_habitable_rooms = self.retrieve_str_byPredicate(
             entity_iri, predicate="obe:hasNumberOfHabitableRooms"
         )
-        property_type = self.retrieve_str_byPredicate(
-            entity_iri, predicate="obe:hasPropertyType/a"
-        )
+        property_type = self.retrieve_propertyType(entity_iri)
         property_usage = self.retrieve_propertyUsage(entity_iri)
         total_floor_area = self.retrieve_omMeasure_byPredicate(
             entity_iri, predicate="obe:hasTotalFloorArea/om:hasValue"
@@ -53,19 +49,32 @@ class OBEEntityStore:
 
         return OBEProperty(
             iri=entity_iri,
-            concepts=concepts,
+            concept=concept,
             address=address,
             built_form=built_form[0] if len(built_form) > 0 else None,
             energy_rating=energy_rating[0] if len(energy_rating) > 0 else None,
             number_of_habitable_rooms=Decimal(number_of_habitable_rooms[0])
             if len(number_of_habitable_rooms) > 0
             else None,
-            property_type=property_type[0] if len(property_type) > 0 else None,
+            property_type=property_type,
             property_usage=property_usage,
             total_floor_area=total_floor_area,
             market_value=market_value,
             ground_elevation=ground_elevation,
         )
+
+    def retrieve_concept(self, entity_iri: str):
+        query_template = """PREFIX obe: <https://www.theworldavatar.com/kg/ontobuiltenv/>
+
+SELECT DISTINCT ?o WHERE {{
+    <{IRI}> a ?o .
+    ?o rdfs:subClassOf* obe:Property .
+}}
+LIMIT 1"""
+        query = query_template.format(IRI=entity_iri)
+
+        response_bindings = self.kg_client.query(query)["results"]["bindings"]
+        return response_bindings[0]["o"]["value"]
 
     def retrieve_address(self, entity_iri: str):
         query_template = """PREFIX ict: <http://ontology.eil.utoronto.ca/icontact.owl#>
@@ -124,8 +133,7 @@ GROUP BY ?PropertyUsage"""
 
 SELECT DISTINCT ?o WHERE {{
     <{IRI}> {pred} ?o .
-}}
-LIMIT 1"""
+}}"""
         query = query_template.format(IRI=entity_iri, pred=predicate)
 
         response_bindings = self.kg_client.query(query)["results"]["bindings"]
@@ -151,3 +159,21 @@ LIMIT 1"""
             numerical_value=Decimal(response_bindings[0]["NumericalValue"]["value"]),
             unit_iri=response_bindings[0]["Unit"]["value"],
         )
+
+    def retrieve_propertyType(self, entity_iri: str):
+        query_template = """PREFIX rdfs:      <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX obe: <https://www.theworldavatar.com/kg/ontobuiltenv/>
+
+SELECT DISTINCT ?o WHERE {{
+    <{IRI}> obe:hasPropertyType/a ?o .
+    ?o rdfs:subClassOf+ obe:PropertyType .
+}}
+LIMIT 1"""
+        query = query_template.format(IRI=entity_iri)
+
+        response_bindings = self.kg_client.query(query)["results"]["bindings"]
+
+        if len(response_bindings) == 0:
+            return None
+        
+        return response_bindings[0]["o"]["value"]

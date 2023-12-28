@@ -30,26 +30,42 @@ class OBEDatasetGenerator:
         kg_client = KgClient(
             "http://165.232.172.16:3838/blazegraph/namespace/kingslynn/sparql"
         )
+        
+        iris: List[str] = []
 
-        query_template = """PREFIX dabgeo:	  <http://www.purl.org/oema/infrastructure/>
-PREFIX obe:       <https://www.theworldavatar.com/kg/ontobuiltenv/>
+        query_template_by_use = """PREFIX dabgeo: <http://www.purl.org/oema/infrastructure/>
+PREFIX obe: <https://www.theworldavatar.com/kg/ontobuiltenv/>
 
 SELECT DISTINCT ?x (COUNT(DISTINCT ?p) as ?degree) WHERE {{
-    ?x obe:hasPropertyUsage/a obe:{PropertyUsage} .
-    ?x ?p ?o .
+    ?x a/rdfs:subClassOf* obe:Property ;
+       obe:hasPropertyUsage/a obe:{PropertyUsage} ;
+       ?p ?o .
 }}
 GROUP BY ?x
 ORDER BY DESC(?degree)
 LIMIT {num}"""
 
-        iris: List[str] = []
-
         for use in OBE_PROPERTYUSAGE_LABELS.keys():
-            query = query_template.format(
-                PropertyUsage=use, num=34
+            query = query_template_by_use.format(
+                PropertyUsage=use, num=20
             )
             bindings = kg_client.query(query)["results"]["bindings"]
-            iris.extend([x["x"]["value"] for x in bindings])
+            iris.extend(x["x"]["value"] for x in bindings)
+
+        query_template_by_type = """PREFIX obe: <https://www.theworldavatar.com/kg/ontobuiltenv/>
+
+SELECT DISTINCT ?x (COUNT(DISTINCT ?p) as ?degree) WHERE {{
+    ?x a {type} ;
+       ?p ?o .
+}}
+GROUP BY ?x
+ORDER BY DESC(?degree)
+LIMIT {num}"""
+
+        for concept, num in (("obe:Flat", 60), ("obe:Property", 40)):
+            query = query_template_by_type.format(type=concept, num=num)
+            bindings = kg_client.query(query)["results"]["bindings"]
+            iris.extend(x["x"]["value"] for x in bindings)
 
         return tuple(iris)
 
