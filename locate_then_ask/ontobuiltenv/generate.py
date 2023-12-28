@@ -19,8 +19,12 @@ SEED_ENTITIES_FILEPATH = "data/seed_entities/ontobuiltenv.txt"
 
 class OBEDatasetGenerator:
     LOCATE2ASK = {
-        "concept_name": (["count"], [1]),
-        "concept_and_literal": (["name", "count", "attribute"], [1, 1, 1]),
+        "concept_name": (["name", "count"], [1, 1]),
+        "concept_and_literal": (["name", "count", "attribute"], [1, 1, 6]),
+    }
+    LOCATE2MASS = {
+        "concept_name": 1,
+        "concept_and_literal": 99
     }
 
     @classmethod

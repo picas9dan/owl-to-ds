@@ -67,6 +67,6 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
 
             verbns.append(verbn)
 
-        verbalization = "use is " + " and ".join(verbns)
+        verbalization = "usage is " + " and ".join(verbns)
 
         return verbalization

@@ -21,7 +21,11 @@ class OBEAsker:
         query_graph.add_question_node("Property", count=True)
 
         query_sparql = self.graph2sparql.convert(query_graph)
-        verbalization = "How many {located} are there?".format(located=verbalization)
+        template = random.choice([
+            "How many {located} are there",
+            "For {located}, how many of them are there"
+        ])
+        verbalization = template.format(located=verbalization)
 
         return query_sparql, verbalization
 
@@ -38,6 +42,10 @@ class OBEAsker:
             verbns.append(random.choice(OBE_ATTR_LABELS[key]))
 
         query_sparql = self.graph2sparql.convert(query_graph)
-        verbalization = "What is the {attrs} of the {located}".format(attrs = " and ".join(verbns), located=verbalization)
+        template = random.choice([
+            "What is the {attrs} of the {located}",
+            "For the {located}, what is its {attrs}"
+        ])
+        verbalization = template.format(attrs = " and ".join(verbns), located=verbalization)
 
         return query_sparql, verbalization
