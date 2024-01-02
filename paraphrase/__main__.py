@@ -16,7 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("filepath")
     parser.add_argument("--domain", type=str, required=False)
     parser.add_argument("--endpoint", type=str, required=False)
-    parser.add_argument("--api_key", type=str, requried=False)
+    parser.add_argument("--api_key", type=str, required=False)
     parser.add_argument("--model", type=str, required=False)
     args = parser.parse_args()
 
