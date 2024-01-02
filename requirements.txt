@@ -1,5 +1,7 @@
+pandas
 rdflib
 networkx
 SPARQLWrapper
 tqdm
 openai
+vllm

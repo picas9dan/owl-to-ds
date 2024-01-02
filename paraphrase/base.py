@@ -93,18 +93,14 @@ class OpenAiClientForBulletPointResponse:
             model=self.model,
             messages=[
                 {
-                    "role": "system",
-                    "content": self.SYSTEM_PROMPT_TEMPLATE.format(num=PARAPHRASE_NUM),
-                },
-                {
                     "role": "user",
-                    "content": input_text,
+                    "content": self.SYSTEM_PROMPT_TEMPLATE.format(num=PARAPHRASE_NUM) + "\n\n\n" + input_text,
                 },
             ],
             **self.kwargs
         )
 
-        response_content = response["choices"][0]["message"]["content"]
+        response_content = response.choices[0].message.content
         return self._parse_openai_response_content(response_content)
 
 
