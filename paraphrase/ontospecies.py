@@ -1,18 +1,7 @@
-import argparse
-import csv
-import json
-import os
-
-from tqdm import tqdm
-import pandas as pd
-
 from .base import Paraphraser
 
 
 class OSParaphraser(Paraphraser):
-    def __init__(self):
-        super().__init__(openai_kwargs=dict(temperature=0.5, frequency_penalty=1))
-
     def paraphrase(self, text: str):
         entity_placeholders = ["methanol", "ethanol", "propanol", "butanol", "pentanol", "hexanol", "heptanol", "octanol", "nonanol"]
         entity_placeholders = [x for x in entity_placeholders if x not in text]

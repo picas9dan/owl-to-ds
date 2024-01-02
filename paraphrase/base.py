@@ -3,7 +3,7 @@ import json
 import os
 from typing import List, Optional
 
-import openai
+from openai import OpenAI
 from tqdm import tqdm
 import pandas as pd
 
@@ -12,7 +12,17 @@ HEADER = ["id", "verbalization", "paraphrases"]
 
 
 class OpenAiClientForBulletPointResponse:
-    def __init__(self, **kwargs: dict):
+    SYSTEM_PROMPT_TEMPLATE = "You will be provided with a machine-generated statement. Rephrase it in {num} different ways as if it were human input to a search engine. Make sure that the paraphrases vary in their query structures, terminological expressions, and sentence lengths. Additionally, keep the square brackets and their enclosing text unchanged."
+
+    def __init__(
+        self,
+        endpoint: None,
+        api_key: Optional[str] = None,
+        model: str = "gpt-4-0613",
+        **kwargs: dict
+    ):
+        self.openai_client = OpenAI(base_url=endpoint, api_key=api_key)
+        self.model = model
         self.kwargs = kwargs
 
     def _sanitize_bulletpoint(self, text: str):
@@ -79,14 +89,12 @@ class OpenAiClientForBulletPointResponse:
         return lines
 
     def call(self, input_text: str):
-        response = openai.ChatCompletion.create(
-            model="gpt-4-0613",
+        response = self.openai_client.chat.completions.create(
+            model=self.model,
             messages=[
                 {
                     "role": "system",
-                    "content": "You will be provided with a machine-generated statement. Rephrase it in {num} different ways as if it were human input to a search engine. Make sure that the paraphrases vary in their query structures, terminological expressions, and sentence lengths. Additionally, keep the square brackets and their enclosing text unchanged.".format(
-                        num=PARAPHRASE_NUM
-                    ),
+                    "content": self.SYSTEM_PROMPT_TEMPLATE.format(num=PARAPHRASE_NUM),
                 },
                 {
                     "role": "user",
@@ -101,11 +109,21 @@ class OpenAiClientForBulletPointResponse:
 
 
 class Paraphraser:
-    def __init__(self, openai_kwargs: Optional[dict] = None):
+    def __init__(
+        self,
+        endpoint: None,
+        api_key: Optional[str] = None,
+        model: str = "gpt-4-0613",
+        openai_kwargs: Optional[dict] = None,
+    ):
         if openai_kwargs is None:
-            self.openai_client = OpenAiClientForBulletPointResponse()
+            self.openai_client = OpenAiClientForBulletPointResponse(
+                endpoint, api_key, model
+            )
         else:
-            self.openai_client = OpenAiClientForBulletPointResponse(**openai_kwargs)
+            self.openai_client = OpenAiClientForBulletPointResponse(
+                endpoint, api_key, model, **openai_kwargs
+            )
 
     def paraphrase_from_file(self, filepath: str):
         with open(filepath, "r") as f:
