@@ -1,6 +1,6 @@
 from collections import defaultdict
 from typing import Dict, List
-from constants.ontospecies import IDENTIFIER_KEYS, PROPERTY_KEYS
+from constants.ontospecies import OSIdentifierKey, OSPropertyKey
 from locate_then_ask.kg_client import KgClient
 from locate_then_ask.ontospecies.model import OSProperty, OSSpecies
 
@@ -40,7 +40,7 @@ SELECT DISTINCT ?IdentifierNameValue ?hasIdentifierName WHERE {{
 }}"""
         query = query_template.format(
             SpeciesIRI=entity_iri,
-            hasIdentifierNameValues=" ".join(["os:has" + x for x in IDENTIFIER_KEYS]),
+            hasIdentifierNameValues=" ".join(["os:has" + x.value for x in OSIdentifierKey]),
         )
 
         response_bindings = self.kg_client.query(query)["results"]["bindings"]
@@ -71,7 +71,7 @@ SELECT DISTINCT * WHERE {{
 }}"""
         query = query_template.format(
             SpeciesIri=entity_iri,
-            hasPropertyNameValues=" ".join(["os:has" + key for key in PROPERTY_KEYS]),
+            hasPropertyNameValues=" ".join(["os:has" + key.value for key in OSPropertyKey]),
         )
         response_bindings = self.kg_client.query(query)["results"]["bindings"]
         value_bindings = [

@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import Any, Iterable, Optional, Tuple, Union
 import networkx as nx
 
-from constants.functions import NumOp
+from constants.functions import NumOp, StrOp
 
 
 class QueryGraph(nx.DiGraph):
@@ -56,7 +56,7 @@ class QueryGraph(nx.DiGraph):
     def add_iri_node(self, iri: str, prefixed: bool, key: Optional[Any] = None):
         self.add_node(iri, iri=iri, template_node=True, prefixed=prefixed, key=key)
 
-    def add_func(self, target_node: str, operator: NumOp, operand: float):
+    def add_func(self, target_node: str, operator: Union[NumOp, StrOp], operand: Any):
         func_num = sum(n.startswith(self._FUNC_PREFIX) for n in self.nodes())
         func_node = self._FUNC_PREFIX + str(func_num)
         func_label = operator.value + "\n" + str(operand)

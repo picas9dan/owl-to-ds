@@ -1,6 +1,6 @@
 import random
 
-from constants.functions import NumOp
+from constants.functions import PRIMITIVE_NUM_OPS, NumOp
 from constants.namespaces import OBE
 from constants.ontobuiltenv import OBE_PROPERTYUSAGE_LABELS, OBEAttrKey
 from locate_then_ask.ontobuiltenv.locate.attr import OBEAttrLocator
@@ -35,7 +35,7 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
             verbn = random.choice(OBE_PROPERTYUSAGE_LABELS[clsname])
 
             if use.usage_share is not None:
-                operator = random.choice(tuple(NumOp))
+                operator = random.choice(PRIMITIVE_NUM_OPS)
                 share_pctg = use.usage_share * 100
                 operand, verbn_numop = make_operand_and_verbn(
                     operator,

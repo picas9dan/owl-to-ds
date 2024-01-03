@@ -1,6 +1,6 @@
 from typing import List
 import networkx as nx
-from constants.functions import NumOp, OSNumOp, StrOp
+from constants.functions import NumOp, StrOp
 
 from locate_then_ask.query_graph import QueryGraph
 
@@ -29,11 +29,6 @@ class Graph2Sparql:
         operand_right = query_graph.nodes[o]["operand"]
 
         if operator in [
-            OSNumOp.LESS_THAN,
-            OSNumOp.GREATER_THAN,
-            OSNumOp.LESS_THAN_EQUAL,
-            OSNumOp.GREATER_THAN_EQUAL,
-            OSNumOp.EQUAL,
             NumOp.LESS_THAN,
             NumOp.GREATER_THAN,
             NumOp.LESS_THAN_EQUAL,
@@ -43,14 +38,14 @@ class Graph2Sparql:
             return "FILTER ( {left} {op} {right} )".format(
                 left=operand_left, op=operator.value, right=operand_right
             )
-        elif operator == OSNumOp.INSIDE_RANGE:
+        elif operator == NumOp.INSIDE_RANGE:
             assert isinstance(operand_right, tuple)
             assert len(operand_right) == 2
             low, high = operand_right
             return "FILTER ( {left} > {low} && {left} < {high} )".format(
                 left=operand_left, low=low, high=high
             )
-        elif operator == OSNumOp.AROUND:
+        elif operator == NumOp.AROUND:
             if operand_right < 0:
                 return "FILTER ( {left} > {right}*1.1 && {left} < {right}*0.9 )".format(
                     left=operand_left, right=operand_right
@@ -63,7 +58,7 @@ class Graph2Sparql:
                 return "FILTER ( {left} > -0.1 && {left} < 0.1 )".format(
                     left=operand_left
                 )
-        elif operator == OSNumOp.OUTSIDE_RANGE:
+        elif operator == NumOp.OUTSIDE_RANGE:
             assert isinstance(operand_right, tuple)
             assert len(operand_right) == 2
             low, high = operand_right
@@ -93,7 +88,7 @@ class Graph2Sparql:
 
         if p == "func":
             operator = query_graph.nodes[o]["operator"]
-            if isinstance(operator, OSNumOp) or isinstance(operator, NumOp):
+            if isinstance(operator, NumOp) or isinstance(operator, NumOp):
                 return self._make_numerical_operator_pattern(query_graph, s, o)
             elif isinstance(operator, StrOp):
                 return self._make_string_operator_pattern(query_graph, s, o)
