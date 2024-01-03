@@ -1,14 +1,17 @@
 from decimal import Decimal
 import json
 
-from constants.functions import NumOp, OSNumOp, StrOp
+from constants.functions import NumOp, StrOp
 from constants.ontobuiltenv import OBEAttrKey
+from constants.ontospecies import OSIdentifierKey, OSPropertyKey, OSSpeciesAttrKey
 
 
 PUBLIC_ENUMS = {
-    "OSNumOp": OSNumOp,
     "StrOp": StrOp,
     "NumOp": NumOp,
+    "OSSpeciesAttrKey": OSSpeciesAttrKey,
+    "OSPropertyKey": OSPropertyKey,
+    "OSIdentifierKey": OSIdentifierKey,
     "OBEAttrKey": OBEAttrKey,
 }
 

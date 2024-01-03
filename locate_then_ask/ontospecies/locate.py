@@ -3,6 +3,8 @@ from typing import Iterable
 
 from constants.functions import NumOp, StrOp
 from constants.ontospecies import (
+    CHEMCLASS_LABELS,
+    USE_LABELS,
     OSIdentifierKey,
     OSPropertyKey,
     OSSpeciesAttrKey,
@@ -17,7 +19,7 @@ class OSSpeciesLocator:
         OSIdentifierKey.INCHI,
         OSIdentifierKey.IUPAC_NAME,
         OSIdentifierKey.MOLECULAR_FORMULA,
-        OSIdentifierKey.SMILES
+        OSIdentifierKey.SMILES,
     ]
 
     def __init__(self):
@@ -79,7 +81,7 @@ class OSSpeciesLocator:
             if key is OSSpeciesAttrKey.PROPERTY:
                 property_keys = random.sample(entity.key2property, k=freq)
                 for k in property_keys:
-                    query_graph.add_literal_node(k, key=key)
+                    query_graph.add_literal_node(k, key=OSPropertyKey(k))
                     query_graph.add_triple("Species", "os:has" + k, k)
 
                     prop = random.choice(entity.key2property[k])
@@ -98,12 +100,10 @@ class OSSpeciesLocator:
                         "Species", "os:hasChemicalClass/rdfs:label", literal_node
                     )
 
-                template = "chemical class{suffix} {be} {chemclasses}"
-                is_plural = freq > 1
+                template = "{attr} is {value}"
                 verbn = template.format(
-                    suffix="es" if is_plural else "",
-                    be="are" if is_plural else "is",
-                    chemclasses=" and ".join(chemclasses),
+                    attr=random.choice(CHEMCLASS_LABELS),
+                    value=" and ".join(chemclasses),
                 )
                 verbns.append(verbn)
             elif key is OSSpeciesAttrKey.USE:
@@ -114,12 +114,10 @@ class OSSpeciesLocator:
                         "Species", "os:hasUse/rdfs:label", literal_node
                     )
 
-                template = "use{suffix} {be} {uses}"
-                is_plural = freq > 1
+                template = "{attr} is {value}"
                 verbn = template.format(
-                    suffix="s" if is_plural else "",
-                    be="are" if is_plural else "is",
-                    uses=" and ".join(uses),
+                    attr=random.choice(USE_LABELS),
+                    value=" and ".join(uses),
                 )
             else:
                 raise Exception("Unexpected key: " + key)
