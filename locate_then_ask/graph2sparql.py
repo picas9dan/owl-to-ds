@@ -38,14 +38,14 @@ class Graph2Sparql:
             return "FILTER ( {left} {op} {right} )".format(
                 left=operand_left, op=operator.value, right=operand_right
             )
-        elif operator == NumOp.INSIDE_RANGE:
+        elif operator is NumOp.INSIDE_RANGE:
             assert isinstance(operand_right, tuple)
             assert len(operand_right) == 2
             low, high = operand_right
             return "FILTER ( {left} > {low} && {left} < {high} )".format(
                 left=operand_left, low=low, high=high
             )
-        elif operator == NumOp.AROUND:
+        elif operator is NumOp.AROUND:
             if operand_right < 0:
                 return "FILTER ( {left} > {right}*1.1 && {left} < {right}*0.9 )".format(
                     left=operand_left, right=operand_right
@@ -58,7 +58,7 @@ class Graph2Sparql:
                 return "FILTER ( {left} > -0.1 && {left} < 0.1 )".format(
                     left=operand_left
                 )
-        elif operator == NumOp.OUTSIDE_RANGE:
+        elif operator is NumOp.OUTSIDE_RANGE:
             assert isinstance(operand_right, tuple)
             assert len(operand_right) == 2
             low, high = operand_right

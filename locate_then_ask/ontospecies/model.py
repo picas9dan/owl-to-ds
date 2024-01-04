@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
+from constants.ontospecies import OSIdentifierKey, OSPropertyKey
+
 
 @dataclass
 class OSProperty:
@@ -13,7 +15,7 @@ class OSProperty:
 @dataclass
 class OSSpecies:
     iri: str
-    key2identifier: Dict[str, List[str]]
-    key2property: Dict[str, List[OSProperty]]
+    key2identifier: Dict[OSIdentifierKey, List[str]]
+    key2property: Dict[OSPropertyKey, List[OSProperty]]
     chemclasses: List[str]
     uses: List[str]

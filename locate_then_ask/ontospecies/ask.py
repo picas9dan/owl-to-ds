@@ -1,4 +1,5 @@
 import random
+from constants.functions import StrOp
 
 from constants.ontospecies import (
     ABSTRACT_IDENTIFIER_KEY,
@@ -9,13 +10,13 @@ from constants.ontospecies import (
     OSPropertyKey,
     OSSpeciesAttrKey,
 )
-from locate_then_ask.ontospecies.graph2sparql import OSGraph2Sparql
+from locate_then_ask.graph2sparql import Graph2Sparql
 from locate_then_ask.query_graph import QueryGraph
 
 
 class OSAsker:
     def __init__(self):
-        self.graph2sparql = OSGraph2Sparql()
+        self.graph2sparql = Graph2Sparql()
 
     def ask_name(self, query_graph: QueryGraph, verbalization: str):
         query_graph.add_question_node("Species")
@@ -28,6 +29,19 @@ class OSAsker:
     def ask_attribute(
         self, query_graph: QueryGraph, verbalization: str, attr_num: int = 1
     ):
+        try:
+            values_node = next(
+                n
+                for n in query_graph.get_objs("Species", "func")
+                if query_graph.nodes[n].get("operator") is StrOp.VALUES
+            )
+            is_many_species = len(query_graph.nodes[values_node].get("operand")) > 1
+        except StopIteration:
+            is_many_species = False
+
+        if is_many_species:
+            query_graph.add_question_node("Species")
+
         will_sample_concrete_attribute = random.sample(
             population=[True, False],
             counts=[
@@ -73,11 +87,14 @@ class OSAsker:
 
             template = random.choice(
                 [
-                    "For {E}, what is its {K}",
-                    "What is the {K} of {E}",
+                    "For {E}, {Q} its {K}",
+                    "{Q} the {K} of {E}",
                 ]
             )
             verbalization = template.format(
+                Q=random.choice(["what is", "compare"])
+                if is_many_species
+                else "what is",
                 E=verbalization,
                 K=" and ".join(keys_label),
             )
@@ -99,9 +116,13 @@ class OSAsker:
             key_label = random.choice(KEY2LABELS[key])
 
             query_sparql = self.graph2sparql.convert(query_graph)
-            template = random.choice(
-                ["For {E}, what are its {K}", "What are the {K} of {E}"]
+            template = random.choice(["For {E}, {Q} its {K}", "{Q} the {K} of {E}"])
+            verbalization = template.format(
+                Q=random.choice(["what are", "compare"])
+                if is_many_species
+                else "what are",
+                E=verbalization,
+                K=key_label,
             )
-            verbalization = template.format(E=verbalization, K=key_label)
 
         return query_sparql, verbalization

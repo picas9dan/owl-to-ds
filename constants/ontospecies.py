@@ -78,7 +78,7 @@ ABSTRACT_IDENTIFIER_KEY = "IdentifierName"
 
 SPECIES_ABSTRACT_ATTRIBUTE_KEYS = [ABSTRACT_PROPERTY_KEY, ABSTRACT_IDENTIFIER_KEY]
 
-PROPERTY_LABELS = {
+OS_PROPERTY_LABELS = {
     OSPropertyKey.ATOM_CHIRAL_COUNT: ["atom chiral count", "atom stereocenter count"],
     OSPropertyKey.ATOM_CHIRAL_DEF_COUNT: [
         "atom chiral def count",
@@ -88,6 +88,8 @@ PROPERTY_LABELS = {
         "atom chiral undef count",
         "undefined atom stereocenter count",
     ],
+    OSPropertyKey.AUTOIGNITION_TEMPERATURE: ["autoignition temperature"],
+    OSPropertyKey.BOILING_POINT: ["boiling point"],
     OSPropertyKey.BOND_CHIRAL_COUNT: ["bond chiral count", "bond stereocenter count"],
     OSPropertyKey.BOND_CHIRAL_DEF_COUNT: [
         "bond chiral def count",
@@ -97,18 +99,28 @@ PROPERTY_LABELS = {
         "bond chiral undef count",
         "undefined bond stereocenter count",
     ],
+    OSPropertyKey.CACO2_PERMEABILITY: ["Caco-2 permeability"],
     # OSPropertyKey.CANONICALIZED_COMPOUND: ["is_canonicalized"],
     OSPropertyKey.CHARGE: ["charge"],
     OSPropertyKey.COMPOUND_COMPLEXITY: ["compound complexity"],
+    OSPropertyKey.COLLISION_CROSSSECTION: ["collision cross-section"],
     OSPropertyKey.COVALENT_UNIT_COUNT: [
         "covalent unit count",
         "number of covalent units",
     ],
+    OSPropertyKey.DENSITY: ["density"],
+    OSPropertyKey.DISSOCIATION_CONSTANTS: ["dissociation constants"],
+    OSPropertyKey.ENTHALPY_OF_SUBLIMATION: ["enthalpy of sublimation"],
     OSPropertyKey.EXACT_MASS: ["exact mass"],
+    OSPropertyKey.FLASH_POINT: ["flash point"],
+    OSPropertyKey.HEAT_CAPACITY: ["heat capacity"],
+    OSPropertyKey.HEAT_OF_COMBUSTION: ["heat of combustion"],
+    OSPropertyKey.HEAT_OF_VAPORIZATION: ["heat of vaporization"],
     OSPropertyKey.HEAVY_ATOM_COUNT: [
         "heavy atom count",
         "number of non-hydrogen atoms",
     ],
+    OSPropertyKey.HENRYS_LAW_CONSTANT: ["Henry's law constant"],
     OSPropertyKey.HYDROGEN_BOND_ACCEPTOR_COUNT: [
         "hydrogen bond acceptor count",
         "number of hydrogen bond acceptors",
@@ -117,42 +129,30 @@ PROPERTY_LABELS = {
         "hydrogen bond donor count",
         "number of hydrogen bond donors",
     ],
+    OSPropertyKey.HYDROPHOBICITY: ["hydrophobicity"],
+    OSPropertyKey.IONIZATION_POTENTIAL: ["ionization potential"],
+    OSPropertyKey.ISOELECTRIC_POINT: ["isoelectric point"],
     OSPropertyKey.ISOTOPE_ATOM_COUNT: ["isotope atom count"],
+    OSPropertyKey.LOG_P: ["LogP", "logP", "Log P", "log P"],
+    OSPropertyKey.LOG_S: ["LogS", "logS", "Log S", "log S"],
+    OSPropertyKey.MELTING_POINT: ["melting point"],
     OSPropertyKey.MOLECULAR_WEIGHT: ["molecular weight", "molecular mass"],
     OSPropertyKey.MONOISOTOPIC_WEIGHT: [
         "mono isotopic weight",
         "monoisotopic weight",
         "monoisotopic mass",
     ],
-    OSPropertyKey.ROTATABLE_BOND_COUNT: ["rotatable bond count"],
-    # OSPropertyKey.SUBSTRUCTURE_KEYS_FINGERPRINT: ["substructure key-based fingerprint"],
-    OSPropertyKey.TAUTOMERS_COUNT: ["tautomer count", "number of tautomers"],
-    OSPropertyKey.XLOGP3: ["XLogP3", "XLOGP3"],
-    OSPropertyKey.AUTOIGNITION_TEMPERATURE: ["autoignition temperature"],
-    OSPropertyKey.CACO2_PERMEABILITY: ["Caco-2 permeability"],
-    OSPropertyKey.COLLISION_CROSSSECTION: ["collision cross-section"],
-    OSPropertyKey.HYDROPHOBICITY: ["hydrophobicity"],
-    OSPropertyKey.IONIZATION_POTENTIAL: ["ionization potential"],
-    OSPropertyKey.ISOELECTRIC_POINT: ["isoelectric point"],
-    OSPropertyKey.LOG_P: ["LogP", "logP", "Log P", "log P"],
-    OSPropertyKey.LOG_S: ["LogS", "logS", "Log S", "log S"],
-    OSPropertyKey.POLAR_SURFACE_AREA: ["polar surface area"],
-    OSPropertyKey.BOILING_POINT: ["boiling point"],
-    OSPropertyKey.DENSITY: ["density"],
-    OSPropertyKey.DISSOCIATION_CONSTANTS: ["dissociation constants"],
-    OSPropertyKey.ENTHALPY_OF_SUBLIMATION: ["enthalpy of sublimation"],
-    OSPropertyKey.FLASH_POINT: ["flash point"],
-    # OSPropertyKey.STANDARD_ENTHALPY_OF_FORMATION: ["standard enthalpy of formation"],
-    OSPropertyKey.HEAT_OF_COMBUSTION: ["heat of combustion"],
-    OSPropertyKey.HEAT_OF_VAPORIZATION: ["heat of vaporization"],
-    OSPropertyKey.HENRYS_LAW_CONSTANT: ["Henry's law constant"],
-    OSPropertyKey.MELTING_POINT: ["melting point"],
     OSPropertyKey.OPTICAL_ROTATION: ["optical rotation"],
+    OSPropertyKey.POLAR_SURFACE_AREA: ["polar surface area"],
+    OSPropertyKey.ROTATABLE_BOND_COUNT: ["rotatable bond count"],
     OSPropertyKey.SOLUBILITY: ["solubility"],
+    # OSPropertyKey.SUBSTRUCTURE_KEYS_FINGERPRINT: ["substructure key-based fingerprint"],
     OSPropertyKey.SURFACE_TENSION: ["surface tension"],
+    OSPropertyKey.TAUTOMERS_COUNT: ["tautomer count", "number of tautomers"],
     OSPropertyKey.VAPOR_DENSITY: ["vapor density"],
     OSPropertyKey.VAPOR_PRESSURE: ["vapor pressure"],
     OSPropertyKey.VICOSITY: ["viscosity"],
+    OSPropertyKey.XLOGP3: ["XLogP3", "XLOGP3"],
 }
 
 IDENTIFIER_LABELS = {
@@ -188,7 +188,7 @@ ABSTRACT_IDENTIFIER_LABELS = [
 ]
 
 KEY2LABELS = {
-    **PROPERTY_LABELS,
+    **OS_PROPERTY_LABELS,
     **IDENTIFIER_LABELS,
     **{
         OSSpeciesAttrKey.USE: USE_LABELS,

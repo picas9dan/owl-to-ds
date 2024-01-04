@@ -84,30 +84,47 @@ def make_operand_and_verbn(
     max_val: Optional[Decimal] = None,
     min_val: Optional[Decimal] = None,
 ):
-    if operator == NumOp.LESS_THAN:
+    if operator is NumOp.LESS_THAN:
         operand = NumGetter.gt(value, to_int=to_int, max_val=max_val)
         verbn = random.choice(["<", "less than", "lower than", "smaller than"])
-    elif operator == NumOp.LESS_THAN_EQUAL:
+    elif operator is NumOp.LESS_THAN_EQUAL:
         if random.getrandbits(1):
             operand = NumGetter.gt(value, to_int=to_int, max_val=max_val)
         else:
             operand = value
         verbn = random.choice(["<=", "less than or equal to", "not greater than"])
-    elif operator == NumOp.GREATER_THAN:
+    elif operator is NumOp.GREATER_THAN:
         operand = NumGetter.lt(value, to_int=to_int, min_val=min_val)
         verbn = random.choice([">", "greater than", "higher than", "bigger than"])
-    elif operator == NumOp.GREATER_THAN_EQUAL:
+    elif operator is NumOp.GREATER_THAN_EQUAL:
         if random.getrandbits(1):
             operand = NumGetter.lt(value, to_int=to_int, min_val=min_val)
         else:
             operand = value
         verbn = random.choice([">=", "greater than or equal to", "not less than"])
-    elif operator == NumOp.EQUAL:
+    elif operator is NumOp.EQUAL:
         operand = value
         verbn = random.choice(["=", "equal to"])
+    elif operator is NumOp.INSIDE_RANGE:
+        low = NumGetter.lt(value, to_int=to_int, min_val=min_val)
+        high = NumGetter.gt(value, to_int=to_int, max_val=max_val)
+        operand = (low, high)
+        verbn = random.choice(["in the range between", "between", "inside the interval"])
+    elif operator is NumOp.OUTSIDE_RANGE:
+        low = NumGetter.lt(value, to_int=to_int, min_val=min_val)
+        high = NumGetter.gt(value, to_int=to_int, max_val=max_val)
+        operand = (low, high)
+        verbn = random.choice(["outside the interval", "not between"])
+    elif operator is NumOp.AROUND:
+        operand = value
+        verbn = random.choice(["around", "approximately"])
     else:
         raise ValueError("Unexpected operator: " + str(operator))
-
-    verbn += " " + str(operand)
+    
+    if isinstance(operand, tuple):
+        operand_str = "({values})".format(values=", ".join([str(x) for x in operand]))
+    else:
+        operand_str = str(operand)
+    verbn += " " + operand_str
 
     return operand, verbn

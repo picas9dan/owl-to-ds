@@ -21,7 +21,8 @@ def count_schema_items(query_graphs: Iterable[QueryGraph]):
                 cls2freq[s] += 1
                 cls2freq[o] += 1
             else:
-                prop2freq[p] += 1
+                for _p in p.split("/"):
+                    prop2freq[_p] += 1
 
     return {
         "property": prop2freq,

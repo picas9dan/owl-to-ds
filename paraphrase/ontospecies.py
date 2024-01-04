@@ -3,7 +3,7 @@ from .base import Paraphraser
 
 class OSParaphraser(Paraphraser):
     def paraphrase(self, text: str):
-        entity_placeholders = ["methanol", "ethanol", "propanol", "butanol", "pentanol", "hexanol", "heptanol", "octanol", "nonanol"]
+        entity_placeholders = ["methanol", "ethane", "propanoic acid", "butadiene", "pentanal", "1-hexyne", "heptane", "octanoic acid", "nonanol"]
         entity_placeholders = [x for x in entity_placeholders if x not in text]
         entity_actuals = []
 

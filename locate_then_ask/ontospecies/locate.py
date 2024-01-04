@@ -4,6 +4,7 @@ from typing import Iterable
 from constants.functions import NumOp, StrOp
 from constants.ontospecies import (
     CHEMCLASS_LABELS,
+    OS_PROPERTY_LABELS,
     USE_LABELS,
     OSIdentifierKey,
     OSPropertyKey,
@@ -30,10 +31,10 @@ class OSSpeciesLocator:
         for entity_iri in entity_iris:
             entity = self.store.get(entity_iri)
             identifier_keys = [
-                x for x in self.IDENTIFIER_WHITELIST if x.value in entity.key2identifier
+                x for x in self.IDENTIFIER_WHITELIST if x in entity.key2identifier
             ]
             identifier_key = random.choice(identifier_keys)
-            entity_name = random.choice(entity.key2identifier[identifier_key.value])
+            entity_name = random.choice(entity.key2identifier[identifier_key])
             entity_names.append(entity_name)
 
         query_graph = QueryGraph()
@@ -76,21 +77,30 @@ class OSSpeciesLocator:
                 key2freq[k] += 1
 
         verbns = []
-        random.shuffle(key2freq)
-        for key, freq in key2freq.items():
+        random.shuffle(keys)
+        for key in keys:
+            freq = key2freq.get(key, 0)
+            if freq == 0:
+                continue
+
             if key is OSSpeciesAttrKey.PROPERTY:
-                property_keys = random.sample(entity.key2property, k=freq)
+                property_keys = random.sample(tuple(entity.key2property.keys()), k=freq)
                 for k in property_keys:
-                    query_graph.add_literal_node(k, key=OSPropertyKey(k))
-                    query_graph.add_triple("Species", "os:has" + k, k)
+                    val_node = k.value + "Value"
+                    query_graph.add_literal_node(val_node)
+                    query_graph.add_triple("Species", "os:has{key}/os:value".format(key=k.value), val_node)
 
                     prop = random.choice(entity.key2property[k])
                     operator = random.choice(tuple(NumOp))
-                    operand, verbn = make_operand_and_verbn(
+                    operand, op_verbn = make_operand_and_verbn(
                         operator, value=prop.value, to_int=random.getrandbits(1)
                     )
 
-                    query_graph.add_func(k, operator=operator, operand=operand)
+                    query_graph.add_func(target_node=val_node, operator=operator, operand=operand)
+
+                    verbn = "{key} is {op}".format(
+                        key=random.choice(OS_PROPERTY_LABELS[k]), op=op_verbn
+                    )
                     verbns.append(verbn)
             elif key is OSSpeciesAttrKey.CHEMCLASS:
                 chemclasses = random.sample(entity.chemclasses, k=freq)
@@ -100,7 +110,7 @@ class OSSpeciesLocator:
                         "Species", "os:hasChemicalClass/rdfs:label", literal_node
                     )
 
-                template = "{attr} is {value}"
+                template = "{attr} is [{value}]"
                 verbn = template.format(
                     attr=random.choice(CHEMCLASS_LABELS),
                     value=" and ".join(chemclasses),
@@ -114,11 +124,12 @@ class OSSpeciesLocator:
                         "Species", "os:hasUse/rdfs:label", literal_node
                     )
 
-                template = "{attr} is {value}"
+                template = "{attr} is [{value}]"
                 verbn = template.format(
                     attr=random.choice(USE_LABELS),
                     value=" and ".join(uses),
                 )
+                verbns.append(verbn)
             else:
                 raise Exception("Unexpected key: " + key)
 
