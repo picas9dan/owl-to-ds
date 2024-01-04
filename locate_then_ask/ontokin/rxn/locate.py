@@ -52,7 +52,6 @@ class OKReactionLocator:
         return query_graph, verbalization
 
     def locate_concept_and_relation_multi(self, entity_iri: str, cond_num: int):
-        verbalized_conds = []
         query_graph = QueryGraph()
         query_graph.add_topic_node("Reaction", iri=entity_iri)
         entity = self.store.get(entity_iri)
@@ -71,7 +70,12 @@ class OKReactionLocator:
             del key2freq["reactant"]
             del key2freq["product"]
 
+        
+
+        popln.append("participant")
         random.shuffle(popln)
+
+        verbalized_conds = []
         for key in popln:
             freq = key2freq[key]
             if freq == 0:
@@ -127,7 +131,7 @@ class OKReactionLocator:
                     )
                     labels.append(species.label)
 
-                template = "{V} [{values}]"
+                template = "{V} {values}"
                 verbalized_conds.append(
                     template.format(
                         V=random.choice(
@@ -161,6 +165,8 @@ class OKReactionLocator:
                 )
             else:
                 raise Exception("Unexpected key: " + key)
+
+        assert verbalized_conds
 
         verbalization = "the chemical reaction that {conds}".format(
             conds=" and ".join(verbalized_conds)
