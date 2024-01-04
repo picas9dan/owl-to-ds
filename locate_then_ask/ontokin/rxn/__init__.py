@@ -14,20 +14,19 @@ class OKReactionExampleMaker(ExampleMakerBase):
     def make_example(self, entity_iri: str):
         locate_strategy = random.sample(
             population=["concept_and_attribute", "concept_and_relation"],
-            counts=[1, 3],
+            counts=[1, 2],
             k=1,
         )[0]
         if locate_strategy == "concept_and_attribute":
             query_graph, verbalization = self.locator.locate_concept_and_attribute(entity_iri)
             ask_strategies = ["relation"]
         elif locate_strategy == "concept_and_relation":
-            cond_num = random.sample(population=[1, 2, 3, 4], counts=[4, 3, 2, 1], k=1)[
-                0
-            ]
-            (
-                query_graph,
-                verbalization,
-            ) = self.locator.locate_concept_and_relation_multi(
+            cond_num = random.sample(
+                population=[1, 2, 3, 4], 
+                counts=[2, 4, 2, 1], 
+                k=1
+            )[0]
+            query_graph, verbalization = self.locator.locate_concept_and_relation_multi(
                 entity_iri, cond_num=cond_num
             )
             if "Mechanism" in query_graph.nodes():

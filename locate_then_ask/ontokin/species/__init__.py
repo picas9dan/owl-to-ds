@@ -18,27 +18,24 @@ class OKSpeciesExampleMaker(ExampleMakerBase):
                 query_graph,
                 verbalization,
             ) = self.locator.locate_entity_name(entity_iri)
-            ask_strategies = ["attribute_or_relation"]
+            ask_strategy = "attribute_or_relation"
         elif locate_strategy == "concept_and_relation":
             (
                 query_graph,
                 verbalization,
             ) = self.locator.locate_concept_and_relation(entity_iri)
-            ask_strategies = ["name", "count", "attribute_or_relation"]
+            ask_strategy = random.choice(["name", "count", "attribute_or_relation"], counts=[1, 1, 2])
         else:
             raise Exception()
 
-        ask_strategy = random.choice(ask_strategies)
         if ask_strategy == "name":
-            ask_datum = self.asker.ask_name(query_graph, verbalization)
+            return self.asker.ask_name(query_graph, verbalization)
         elif ask_strategy == "count":
-            ask_datum = self.asker.ask_count(query_graph, verbalization)
+            return self.asker.ask_count(query_graph, verbalization)
         elif ask_strategy == "attribute_or_relation":
             attr_num = random.sample(population=[1, 2], counts=[2, 1], k=1)[0]
-            ask_datum = self.asker.ask_attribute_or_relation(
+            return self.asker.ask_attribute_or_relation(
                 query_graph, verbalization, attr_num=attr_num
             )
         else:
             raise Exception()
-        
-        return ask_datum
