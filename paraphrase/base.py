@@ -12,7 +12,7 @@ HEADER = ["id", "verbalization", "paraphrases"]
 
 
 class OpenAiClientForBulletPointResponse:
-    SYSTEM_PROMPT_TEMPLATE = "You will be provided with a machine-generated statement. Rephrase it in {num} different ways as if it were human input to a search engine. Make sure that the paraphrases vary in their query structures, terminological expressions, and sentence lengths. Additionally, keep the square brackets and their enclosing text unchanged."
+    SYSTEM_PROMPT_TEMPLATE = "You will be provided with a machine-generated statement. Rephrase it in {num} different ways as if it were human input to a search engine. Additionally, keep the square brackets, tags, and their enclosing text unchanged."
 
     def __init__(
         self,

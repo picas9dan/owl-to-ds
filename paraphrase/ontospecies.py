@@ -1,10 +1,11 @@
+import random
+from typing import Iterable
+
 from .base import Paraphraser
 
 
 class OSParaphraser(Paraphraser):
-    def paraphrase(self, text: str):
-        entity_placeholders = ["methanol", "ethane", "propanoic acid", "butadiene", "pentanal", "1-hexyne", "heptane", "octanoic acid", "nonanol"]
-        entity_placeholders = [x for x in entity_placeholders if x not in text]
+    def _paraphrase(self, text: str, entity_placeholders: Iterable[str]):
         entity_actuals = []
 
         while True:
@@ -18,43 +19,37 @@ class OSParaphraser(Paraphraser):
             idx_entity_end += len("</entity>")
 
             entity = text[idx_entity_start:idx_entity_end]
-            text = text.replace(entity, entity_placeholders[len(entity_actuals)])
+            text = text[:idx_entity_start] + entity_placeholders[len(entity_actuals)] + text[idx_entity_end:]
             entity_actuals.append(entity)
 
-        try_limit = 3
-        try_num = 0
-        paraphrases = None
-
-        while try_num < try_limit:
-            if try_num > 0:
-                print("Try {num} (started from 0)".format(num=try_num))
-
-            paraphrases = super().paraphrase(text)
-
-            if len(entity_actuals) == 0:  # no placeholders to replace
-                break
-
-            will_retry = False
-            for i in range(len(paraphrases)):
-                for placeholder, actual in zip(entity_placeholders, entity_actuals):
-                    paraphrase = paraphrases[i].replace(placeholder, actual)
-                    if paraphrase == paraphrases[i]:
-                        will_retry = True
-                        break
-                    paraphrases[i] = paraphrase
-                if will_retry:
+        paraphrases = super().paraphrase(text)
+        if not entity_actuals:
+            return paraphrases
+        
+        processed_paraphrases = []
+        for paraphrase in paraphrases:
+            valid = True
+            for placeholder, actual in zip(entity_placeholders, entity_actuals):
+                processed_paraphrase = paraphrase.replace(placeholder, actual)
+                if processed_paraphrase == paraphrase:
+                    valid = False
                     break
+            if valid:
+                processed_paraphrases.append(processed_paraphrase)
+        return processed_paraphrases
 
-            if will_retry:
-                try_num += 1
-                continue
-            else:
-                break
+    def paraphrase(self, text: str):
+        entity_placeholders = ["methanol", "ethanol", "propanol", "butanol", "pentanol", "hexanol", "heptanol", "octanol", "nonanol"]
+        entity_placeholders = [x for x in entity_placeholders if x not in text]
 
-        if paraphrases is None:
-            raise Exception("No calls have been made to OpenAI for paraphrasing.")
+        try_num = 0
+        paraphrases = []
+        while len(paraphrases) < 3 and try_num < 3:
+            random.shuffle(entity_placeholders)
+            paraphrases.extend(self._paraphrase(text, entity_placeholders))
+            try_num += 1
 
-        if try_num == try_limit:
-            raise Exception("Unacceptable paraphrasing results: " + paraphrases)
+        if len(paraphrases) < 3:
+            print("Unable to generate 3 faithful paraphrases.\nOriginal text: {og}\nParaphrases: {p}".format(og=text, p=paraphrases))
 
         return paraphrases
