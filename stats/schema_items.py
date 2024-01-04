@@ -22,6 +22,8 @@ def count_schema_items(query_graphs: Iterable[QueryGraph]):
                 cls2freq[o] += 1
             else:
                 for _p in p.split("/"):
+                    if _p.startswith("^"):
+                        _p = _p[1:]
                     prop2freq[_p] += 1
 
     return {

@@ -79,8 +79,6 @@ class OKMechanismLocator:
             )
 
         verbalized_conds = locate_func(query_graph, cond_num)
-        verbalization = "the reaction mechanism that {conds}".format(
-            conds=" and ".join(verbalized_conds)
-        )
+        verbalization = "the reaction mechanism that " + verbalized_conds
 
         return query_graph, verbalization

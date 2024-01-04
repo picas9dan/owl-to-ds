@@ -18,14 +18,14 @@ class OKReactionExampleMaker(ExampleMakerBase):
             k=1,
         )[0]
         if locate_strategy == "concept_and_attribute":
-            query_graph, verbalization = self.locator.locate_concept_and_attribute(entity_iri)
+            query_graph, verbalization = self.locator.locate_concept_and_attribute(
+                entity_iri
+            )
             ask_strategies = ["relation"]
         elif locate_strategy == "concept_and_relation":
-            cond_num = random.sample(
-                population=[1, 2, 3, 4], 
-                counts=[2, 4, 2, 1], 
-                k=1
-            )[0]
+            cond_num = random.sample(population=[1, 2, 3, 4], counts=[2, 4, 2, 1], k=1)[
+                0
+            ]
             query_graph, verbalization = self.locator.locate_concept_and_relation_multi(
                 entity_iri, cond_num=cond_num
             )
@@ -38,12 +38,18 @@ class OKReactionExampleMaker(ExampleMakerBase):
 
         ask_strategy = random.choice(ask_strategies)
         if ask_strategy == "name":
-            ask_datum = self.asker.ask_name(query_graph, verbalization)
+            query_sparql, verbalization = self.asker.ask_name(
+                query_graph, verbalization
+            )
         elif ask_strategy == "count":
-            ask_datum = self.asker.ask_count(query_graph, verbalization)
+            query_sparql, verbalization = self.asker.ask_count(
+                query_graph, verbalization
+            )
         elif ask_strategy == "relation":
-            ask_datum = self.asker.ask_relation(query_graph, verbalization)
+            query_sparql, verbalization = self.asker.ask_relation(
+                query_graph, verbalization
+            )
         else:
             raise Exception()
 
-        return ask_datum
+        return query_graph, query_sparql, verbalization

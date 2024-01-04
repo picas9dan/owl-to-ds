@@ -93,7 +93,7 @@ class OKReactionLocator:
                     ["has reactants {values}", "consumes {values}"]
                 )
                 verbalized_conds.append(
-                    template.format(values=" and ".join(["[{x}]" for x in labels]))
+                    template.format(values=" and ".join(["[{x}]".format(x=x) for x in labels]))
                 )
             elif key == "product":
                 labels = []
@@ -109,7 +109,7 @@ class OKReactionLocator:
 
                 template = random.choice(["has products {values}", "produces {values}"])
                 verbalized_conds.append(
-                    template.format(values=" and ".join(["[{x}]" for x in labels]))
+                    template.format(values=" and ".join(["[{x}]".format(x=x) for x in labels]))
                 )
             elif key == "participant":
                 labels = []
@@ -133,7 +133,7 @@ class OKReactionLocator:
                         V=random.choice(
                             ["has", "features", "includes", "is participated by"]
                         ),
-                        values=" and ".join(["[{x}]" for x in labels]),
+                        values=" and ".join(["[{x}]".format(x=x) for x in labels]),
                     )
                 )
             elif key == "mechanism":
@@ -150,7 +150,7 @@ class OKReactionLocator:
                     ]
                 )
 
-                template = "involved in the mechanism {verb} in [{label}]"
+                template = "is involved in the mechanism {verb} in [{label}]"
                 verbalized_conds.append(
                     template.format(
                         verb=random.choice(

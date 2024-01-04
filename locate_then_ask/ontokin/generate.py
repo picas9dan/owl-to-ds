@@ -16,8 +16,7 @@ from locate_then_ask.ontokin.species import OKSpeciesExampleMaker
 from locate_then_ask.ontokin.model import OKGasPhaseReaction, OKMechanism, OKSpecies
 
 
-SEED_SPECIES_NUM = 2000
-SEED_SPECIES_FILEPATH = "data/seed_entities/ontokin.txt"
+SEED_ENTITIES_FILEPATH = "data/seed_entities/ontokin.txt"
 
 
 class DatasetGenerator:
@@ -75,7 +74,7 @@ LIMIT 100"""
         user: Optional[str] = None,
         pw: Optional[str] = None,
     ):
-        filepath = os.path.join(ROOTDIR, SEED_SPECIES_FILEPATH)
+        filepath = os.path.join(ROOTDIR, SEED_ENTITIES_FILEPATH)
 
         if not os.path.isfile(filepath):
             assert (
@@ -120,15 +119,15 @@ LIMIT 100"""
             else:
                 raise Exception()
 
-            ask_datum = example_maker.make_example(entity_iri)
+            query_graph, query_sparql, verbalization = example_maker.make_example(entity_iri)
 
             example = dict(
                 id=i,
                 topic_entity=topic_entity,
-                verbalization=ask_datum.verbalization,
+                verbalization=verbalization,
                 query=dict(
-                    sparql=ask_datum.query_sparql,
-                    graph=nx.node_link_data(ask_datum.query_graph),
+                    sparql=query_sparql,
+                    graph=nx.node_link_data(query_graph),
                 ),
             )
             examples.append(example)
