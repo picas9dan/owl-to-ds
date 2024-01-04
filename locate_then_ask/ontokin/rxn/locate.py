@@ -1,4 +1,4 @@
-import copy
+from collections import defaultdict
 import random
 
 from locate_then_ask.ontokin.entity_store import OKEntityStore
@@ -22,178 +22,148 @@ class OKReactionLocator:
 
         query_graph = QueryGraph()
         eqn_node = query_graph.make_literal_node(eqn)
-        query_graph.add_node(
-            "Reaction",
-            iri=entity_iri,
-            rdf_type="okin:GasPhaseReaction",
-            topic_entity=True,
-        )
-        query_graph.add_edge("Reaction", eqn_node, label="okin:hasEquation")
+        query_graph.add_topic_node("Reaction", iri=entity_iri)
+        query_graph.add_triple("Reaction", "okin:hasEquation", eqn_node)
 
         verbalization = "the chemical reaction [{entity}]".format(entity=eqn)
 
-        if "Mechanism" not in query_graph.nodes() and random.getrandbits(1):
+        if random.getrandbits(1):
             mechanism_iri = random.choice(entity.mechanism_iris)
             mechanism = self.store.get(mechanism_iri)
             assert isinstance(mechanism, OKMechanism)
 
             mechanism_node = "Mechanism"
             doi_node = query_graph.make_literal_node(mechanism.doi)
-            query_graph.add_node(
-                mechanism_node, iri=mechanism.iri, rdf_type="okin:ReactionMechanism"
-            )
-            query_graph.add_edges_from(
+            query_graph.add_node(mechanism_node, iri=mechanism.iri)
+            query_graph.add_triples(
                 [
-                    ("Reaction", mechanism_node, dict(label="^okin:hasReaction")),
-                    (
-                        mechanism_node,
-                        doi_node,
-                        dict(label="okin:hasProvenance/op:hasDOI"),
-                    ),
+                    ("Reaction", "^okin:hasReaction", mechanism_node),
+                    (mechanism_node, "okin:hasProvenance/op:hasDOI", doi_node),
                 ]
             )
-            verbalization += " involved in the mechanism found in [{label}]".format(
-                label=mechanism.doi
-            )
 
-        return query_graph, verbalization
-
-    def _locate_concept_name(self, entity_iri: str):
-        query_graph = QueryGraph()
-        query_graph.add_node(
-            "Reaction",
-            iri=entity_iri,
-            rdf_type="okin:GasPhaseReaction",
-            label="okin:GasPhaseReaction",
-            topic_entity=True,
-        )
-        return query_graph, "chemical reaction"
-
-    def _locate_by_species(self, query_graph: QueryGraph, entity: OKSpecies, type: str):
-        if type == "reactant":
-            predicate = "ocape:hasReactant"
-            template = "has reactant [{label}]"
-        elif type == "product":
-            predicate = "ocape:hasProduct"
-            template = "has product [{label}]"
-        elif type == "either":
-            predicate = "(ocape:hasReactant|ocape:hasProduct)"
-            template = "{V} [{{label}}]".format(
-                V=random.choice(["has", "features", "includes", "is participated by"])
-            )
-        else:
-            raise ValueError("Unexpected species type wrt chemical reactions: " + type)
-
-        node = "Species_" + str(
-            sum(n.startswith("Species_") for n in query_graph.nodes())
-        )
-
-        query_graph.add_node(
-            node,
-            iri=entity.iri,
-            rdf_type="os:Species",
-            label=entity.label,
-            template_node=True,
-        )
-        query_graph.add_edge("Reaction", node, label=predicate)
-        verbalization = template.format(label=entity.label)
-        return query_graph, verbalization
-
-    def _locate_by_mechanism(
-        self, query_graph: QueryGraph, sampled_entity: OKMechanism
-    ):
-        mechanism_node = "Mechanism"
-        doi_node = query_graph.make_literal_node(sampled_entity.doi)
-        query_graph.add_node(
-            mechanism_node, iri=sampled_entity.iri, rdf_type="okin:ReactionMechanism"
-        )
-        query_graph.add_edges_from(
-            [
-                ("Reaction", mechanism_node, dict(label="^okin:hasReaction")),
-                (
-                    mechanism_node,
-                    doi_node,
-                    dict(label="okin:hasProvenance/op:hasDOI"),
+            verbalization += " involved in the mechanism {verb} in [{label}]".format(
+                verb=random.choice(
+                    ["found", "proposed", "outlined", "indicated", "shown"]
                 ),
-            ]
-        )
-        verbalization = "is involved in the mechanism found in [{DOI}]".format(
-            DOI=sampled_entity.doi
-        )
-        return query_graph, verbalization
-
-    def _locate_concept_and_relation(self, query_graph: QueryGraph):
-        query_graph = copy.deepcopy(query_graph)
-        topic_node = next(
-            n
-            for n, topic_entity in query_graph.nodes(data="topic_entity")
-            if topic_entity
-        )
-        entity_iri = query_graph.nodes[topic_node]["iri"]
-        entity = self.store.get(entity_iri)
-        assert isinstance(entity, OKGasPhaseReaction)
-
-        sampled_species_iris = [
-            query_graph.nodes[n]["iri"]
-            for n in query_graph.nodes()
-            if n.startswith("Species_")
-        ]
-        unsampled_reactant_iris = [
-            x for x in entity.reactant_iris if x not in sampled_species_iris
-        ]
-        unsampled_product_iris = [
-            x for x in entity.product_iris if x not in sampled_species_iris
-        ]
-
-        sampling_frame = unsampled_reactant_iris + unsampled_product_iris
-
-        sampled_mechanism_nodes = query_graph.get_objs(
-            subj="Reaction",
-            predicate="^okin:hasReaction",
-        )
-        assert len(sampled_mechanism_nodes) <= 1
-        if len(sampled_mechanism_nodes) == 0:
-            sampling_frame += [random.choice(entity.mechanism_iris)]
-
-        if len(sampling_frame) == 0:
-            return query_graph, ""
-
-        sampled_iri = random.choice(sampling_frame)
-        sampled_entity = self.store.get(sampled_iri)
-        if sampled_iri in unsampled_reactant_iris:
-            assert isinstance(sampled_entity, OKSpecies)
-            query_graph, verbalization = self._locate_by_species(
-                query_graph,
-                entity=sampled_entity,
-                type=random.choice(["reactant", "either"]),
+                label=mechanism.doi,
             )
-        elif sampled_iri in unsampled_product_iris:
-            assert isinstance(sampled_entity, OKSpecies)
-            query_graph, verbalization = self._locate_by_species(
-                query_graph,
-                entity=sampled_entity,
-                type=random.choice(["product", "either"]),
-            )
-        else:
-            assert isinstance(sampled_entity, OKMechanism)
-            query_graph, verbalization = self._locate_by_mechanism(
-                query_graph, sampled_entity
-            )
+
         return query_graph, verbalization
 
     def locate_concept_and_relation_multi(self, entity_iri: str, cond_num: int):
         verbalized_conds = []
-        query_graph, concept = self._locate_concept_name(entity_iri)
+        query_graph = QueryGraph()
+        query_graph.add_topic_node("Reaction", iri=entity_iri)
+        entity = self.store.get(entity_iri)
+        assert isinstance(entity, OKGasPhaseReaction)
 
-        for _ in range(cond_num):
-            query_graph, verbalized_cond = self._locate_concept_and_relation(
-                query_graph
-            )
-            if verbalized_cond:
-                verbalized_conds.append(verbalized_cond)
+        popln = ["reactant", "product", "mechanism"]
+        counts = [len(entity.reactant_iris), len(entity.product_iris), 1]
+        keys = random.sample(popln, counts=counts, k=min(cond_num, sum(counts)))
 
-        verbalization = "the {concept} that {conds}".format(
-            concept=concept, conds=" and ".join(verbalized_conds)
+        key2freq = defaultdict(lambda: 0)
+        for k in keys:
+            key2freq[k] += 1
+
+        if random.getrandbits(1):
+            key2freq["participant"] = key2freq["reactant"] + key2freq["product"]
+            del key2freq["reactant"]
+            del key2freq["product"]
+
+        random.shuffle(popln)
+        for key in popln:
+            freq = key2freq[key]
+            if freq == 0:
+                continue
+
+            if key == "reactant":
+                labels = []
+                for reactant_iri in random.sample(entity.reactant_iris, k=freq):
+                    reactant = self.store.get(reactant_iri)
+                    assert isinstance(reactant, OKSpecies)
+
+                    literal_node = query_graph.make_literal_node(reactant.label)
+                    query_graph.add_triple(
+                        "Reaction", "ocape:hasReactant/skos:altLabel", literal_node
+                    )
+                    labels.append(reactant.label)
+
+                template = random.choice(
+                    ["has reactants {values}", "consumes {values}"]
+                )
+                verbalized_conds.append(
+                    template.format(values=" and ".join(["[{x}]" for x in labels]))
+                )
+            elif key == "product":
+                labels = []
+                for product_iri in random.sample(entity.product_iris, k=freq):
+                    product = self.store.get(product_iri)
+                    assert isinstance(product, OKSpecies)
+
+                    literal_node = query_graph.make_literal_node(product.label)
+                    query_graph.add_triple(
+                        "Reaction", "ocape:hasProduct/skos:altLabel", literal_node
+                    )
+                    labels.append(product.label)
+
+                template = random.choice(["has products {values}", "produces {values}"])
+                verbalized_conds.append(
+                    template.format(values=" and ".join(["[{x}]" for x in labels]))
+                )
+            elif key == "participant":
+                labels = []
+                for species_iri in random.sample(
+                    entity.reactant_iris + entity.product_iris, k=freq
+                ):
+                    species = self.store.get(species_iri)
+                    assert isinstance(species, OKSpecies)
+
+                    literal_node = query_graph.make_literal_node(species.label)
+                    query_graph.add_triple(
+                        "Reaction",
+                        "(ocape:hasReactant|ocape:hasProduct)/skos:altLabel",
+                        literal_node,
+                    )
+                    labels.append(species.label)
+
+                template = "{V} [{values}]"
+                verbalized_conds.append(
+                    template.format(
+                        V=random.choice(
+                            ["has", "features", "includes", "is participated by"]
+                        ),
+                        values=" and ".join(["[{x}]" for x in labels]),
+                    )
+                )
+            elif key == "mechanism":
+                assert freq == 1
+                mechanism_iri = random.choice(entity.mechanism_iris)
+                mechanism = self.store.get(mechanism_iri)
+
+                literal_node = query_graph.make_literal_node(mechanism.doi)
+                query_graph.add_node("Mechanism", iri=mechanism_iri)
+                query_graph.add_triples(
+                    [
+                        ("Reaction", "^okin:hasReaction", "Mechanism"),
+                        ("Mechanism", "okin:hasProvenance/op:hasDOI", literal_node),
+                    ]
+                )
+
+                template = "involved in the mechanism {verb} in [{label}]"
+                verbalized_conds.append(
+                    template.format(
+                        verb=random.choice(
+                            ["found", "proposed", "outlined", "indicated", "shown"]
+                        ),
+                        label=mechanism.doi,
+                    )
+                )
+            else:
+                raise Exception("Unexpected key: " + key)
+
+        verbalization = "the chemical reaction that {conds}".format(
+            conds=" and ".join(verbalized_conds)
         )
 
         return query_graph, verbalization

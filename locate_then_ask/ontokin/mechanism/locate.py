@@ -9,11 +9,6 @@ class OKMechanismLocator:
     def __init__(self, store: OKEntityStore):
         self.store = store
 
-    def locate_concept_name(self, entity_iri: str):
-        query_graph = QueryGraph()
-        query_graph.add_topic_node("Mechanism", iri=entity_iri)
-        return query_graph, "reaction mechanism"
-
     def _locate_concept_and_relation_species(
         self, query_graph: QueryGraph, cond_num: int = 1
     ):
@@ -70,7 +65,8 @@ class OKMechanismLocator:
     def locate_concept_and_relation_multi(
         self, entity_iri: str, cond_num: int, obj_type: str
     ):
-        query_graph, concept = self.locate_concept_name(entity_iri)
+        query_graph = QueryGraph()
+        query_graph.add_topic_node("Mechanism", iri=entity_iri)
 
         if obj_type == "species":
             locate_func = self._locate_concept_and_relation_species
@@ -83,8 +79,8 @@ class OKMechanismLocator:
             )
 
         verbalized_conds = locate_func(query_graph, cond_num)
-        verbalization = "the {concept} that {conds}".format(
-            concept=concept, conds=" and ".join(verbalized_conds)
+        verbalization = "the reaction mechanism that {conds}".format(
+            conds=" and ".join(verbalized_conds)
         )
 
         return query_graph, verbalization

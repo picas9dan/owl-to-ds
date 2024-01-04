@@ -1,52 +1,37 @@
-import copy
 import random
-from locate_then_ask.data_model import AskDatum
-from locate_then_ask.ontokin.graph2sparql import OKGraph2Sparql
+
+from locate_then_ask.graph2sparql import Graph2Sparql
 from locate_then_ask.query_graph import QueryGraph
 
 
 class OKReactionAsker:
     def __init__(self):
-        self.graph2sparql = OKGraph2Sparql()
+        self.graph2sparql = Graph2Sparql()
 
     def ask_name(self, query_graph: QueryGraph, verbalization: str):
-        query_graph = copy.deepcopy(query_graph)
-        query_graph.nodes["Reaction"]["question_node"] = True
+        query_graph.add_question_node("Reaction")
 
         verbalization = "What is " + verbalization
         query_sparql = self.graph2sparql.convert(query_graph)
 
-        return AskDatum(
-            query_graph=query_graph,
-            query_sparql=query_sparql,
-            verbalization=verbalization,
-        )
+        return query_sparql, verbalization
 
     def ask_count(self, query_graph: QueryGraph, verbalization: str):
         assert "Mechanism" in query_graph.nodes()
 
-        query_graph = copy.deepcopy(query_graph)
-        query_graph.nodes["Reaction"]["question_node"] = True
-        query_graph.nodes["Reaction"]["count"] = True
+        query_graph.add_question_node("Reaction", count=True)
 
         if verbalization.startswith("the"):
             verbalization = verbalization[len("the") :].strip()
 
-        verbalization = "How many " + verbalization
+        verbalization = "How many {x} are there".format(x=verbalization)
         query_sparql = self.graph2sparql.convert(query_graph)
 
-        return AskDatum(
-            query_graph=query_graph,
-            query_sparql=query_sparql,
-            verbalization=verbalization,
-        )
+        return query_sparql, verbalization
 
     def ask_relation(self, query_graph: QueryGraph, verbalization: str):
-        query_graph = copy.deepcopy(query_graph)
-
-        qnode = "KineticModel"
-        query_graph.add_node(qnode, question_node=True)
-        query_graph.add_edge("Reaction", qnode, label="okin:hasKineticModel")
+        query_graph.add_question_node("KineticModel")
+        query_graph.add_triple("Reaction", "okin:hasKineticModel", "KineticModel")
 
         template = random.choice(
             [
@@ -67,12 +52,8 @@ class OKReactionAsker:
         )
 
         if "Mechanism" in query_graph.nodes():
-            query_graph.add_edge("KineticModel", "Mechanism", label="okin:definedIn")
+            query_graph.add_triple("KineticModel", "okin:definedIn", "Mechanism")
 
         query_sparql = self.graph2sparql.convert(query_graph)
 
-        return AskDatum(
-            query_graph=query_graph,
-            query_sparql=query_sparql,
-            verbalization=verbalization,
-        )
+        return query_sparql, verbalization
