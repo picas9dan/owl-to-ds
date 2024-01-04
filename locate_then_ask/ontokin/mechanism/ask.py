@@ -9,14 +9,9 @@ class OKMechanismAsker:
         self.graph2sparql = OKGraph2Sparql()
 
     def ask_name(self, query_graph: QueryGraph, verbalization: str):
-        query_graph = copy.deepcopy(query_graph)
-        query_graph.nodes["Mechanism"]["question_node"] = True
-
+        query_graph.add_question_node("Mechanism")
+        
         query_sparql = self.graph2sparql.convert(query_graph)
         verbalization = "What is " + verbalization
-
-        return AskDatum(
-            query_graph=query_graph,
-            query_sparql=query_sparql,
-            verbalization=verbalization,
-        )
+        
+        return query_sparql, verbalization

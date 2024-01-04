@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 from constants.ontospecies import OSIdentifierKey, OSPropertyKey
 
 
-@dataclass
+@dataclass(frozen=True)
 class OSProperty:
     value: float
     unit: str
@@ -12,7 +12,7 @@ class OSProperty:
     reference_state_unit: Optional[str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class OSSpecies:
     iri: str
     key2identifier: Dict[OSIdentifierKey, List[str]]
