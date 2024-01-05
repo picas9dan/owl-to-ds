@@ -12,7 +12,7 @@ HEADER = ["id", "verbalization", "paraphrases"]
 
 
 class OpenAiClientForBulletPointResponse:
-    SYSTEM_PROMPT_TEMPLATE = "You will be provided with a machine-generated statement. Rephrase it in {num} different ways as if it were human input to a search engine. Additionally, keep the square brackets, tags, and their enclosing text unchanged."
+    SYSTEM_PROMPT_TEMPLATE = "You will be provided with a machine-generated query. Rephrase it in {num} different ways. Additionally, keep the square brackets, tags, and their enclosing text unchanged."
 
     def __init__(
         self,
@@ -94,7 +94,9 @@ class OpenAiClientForBulletPointResponse:
             messages=[
                 {
                     "role": "user",
-                    "content": self.SYSTEM_PROMPT_TEMPLATE.format(num=PARAPHRASE_NUM) + "\n\n\n" + input_text,
+                    "content": self.SYSTEM_PROMPT_TEMPLATE.format(num=PARAPHRASE_NUM)
+                    + "\n\n\n"
+                    + input_text,
                 },
             ],
             **self.kwargs
@@ -147,4 +149,50 @@ class Paraphraser:
             raise e
 
     def paraphrase(self, text: str):
-        return self.openai_client.call(text)
+        constants = []
+        ptr = 0
+        while ptr < len(text):
+            start = text.find("[", ptr)
+            if start < 0:
+                break
+
+            if start > 0 and not text[start - 1].isspace():
+                ptr = start + 1
+                continue
+
+            end = start + 1
+            while end < len(text):
+                end = text.find("]", end)
+                if end < 0:
+                    break
+                if (
+                    end + 1 == len(text)
+                    or text[end + 1].isspace()
+                    or text[end + 1] in ".,!?;"
+                ):
+                    break
+                else:
+                    end += 1
+
+            if end < 0:
+                break
+
+            constants.append(text[start : end + 1])
+            ptr = end + 1
+
+        try_num = 0
+        paraphrases = []
+        while len(paraphrases) < 3 and try_num < 3:
+            _paraphrases = self.openai_client.call(text)
+            _paraphrases = [x for x in _paraphrases if all(y in x for y in constants)]
+            paraphrases.extend(_paraphrases)
+            try_num += 1
+
+        if len(paraphrases) < 3:
+            print(
+                "Unable to generate 3 faithful paraphrases.\nOriginal text: {og}\nParaphrases: {p}".format(
+                    og=text, p=paraphrases
+                )
+            )
+
+        return paraphrases

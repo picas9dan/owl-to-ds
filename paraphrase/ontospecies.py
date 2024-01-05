@@ -5,6 +5,18 @@ from .base import Paraphraser
 
 
 class OSParaphraser(Paraphraser):
+    ENTITY_PLACEHOLDERS = [
+        "methanol",
+        "ethanol",
+        "propanol",
+        "butanol",
+        "pentanol",
+        "hexanol",
+        "heptanol",
+        "octanol",
+        "nonanol",
+    ]
+
     def _paraphrase(self, text: str, entity_placeholders: Iterable[str]):
         entity_actuals = []
 
@@ -19,13 +31,17 @@ class OSParaphraser(Paraphraser):
             idx_entity_end += len("</entity>")
 
             entity = text[idx_entity_start:idx_entity_end]
-            text = text[:idx_entity_start] + entity_placeholders[len(entity_actuals)] + text[idx_entity_end:]
+            text = "{left}[{mid}]{right}".format(
+                left=text[:idx_entity_start],
+                mid=entity_placeholders[len(entity_actuals)],
+                right=text[idx_entity_end:],
+            )
             entity_actuals.append(entity)
 
         paraphrases = super().paraphrase(text)
         if not entity_actuals:
             return paraphrases
-        
+
         processed_paraphrases = []
         for paraphrase in paraphrases:
             valid = True
@@ -39,17 +55,24 @@ class OSParaphraser(Paraphraser):
         return processed_paraphrases
 
     def paraphrase(self, text: str):
-        entity_placeholders = ["methanol", "ethanol", "propanol", "butanol", "pentanol", "hexanol", "heptanol", "octanol", "nonanol"]
-        entity_placeholders = [x for x in entity_placeholders if x not in text]
-
-        try_num = 0
-        paraphrases = []
-        while len(paraphrases) < 3 and try_num < 3:
-            random.shuffle(entity_placeholders)
-            paraphrases.extend(self._paraphrase(text, entity_placeholders))
-            try_num += 1
+        _text = text.replace("<entity>", "[")
+        _text = _text.replace("</entity>", "]")
+        paraphrases = super().paraphrase(_text)
 
         if len(paraphrases) < 3:
-            print("Unable to generate 3 faithful paraphrases.\nOriginal text: {og}\nParaphrases: {p}".format(og=text, p=paraphrases))
+            entity_placeholders = [x for x in self.ENTITY_PLACEHOLDERS if x not in text]
 
-        return paraphrases
+            try_num = 0
+            while len(paraphrases) < 3 and try_num < 3:
+                random.shuffle(entity_placeholders)
+                paraphrases.extend(self._paraphrase(text, entity_placeholders))
+                try_num += 1
+
+            if len(paraphrases) < 3:
+                print(
+                    "Unable to generate 3 faithful paraphrases.\nOriginal text: {og}\nParaphrases: {p}".format(
+                        og=text, p=paraphrases
+                    )
+                )
+
+            return paraphrases
