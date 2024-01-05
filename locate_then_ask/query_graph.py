@@ -29,7 +29,7 @@ class QueryGraph(nx.DiGraph):
             if u == subj and label == predicate
         ]
 
-    def add_topic_node(self, n: str, iri: str):
+    def add_topic_node(self, n: str, iri: Optional[str] = None):
         self.add_node(n, topic_entity=True, iri=iri)
 
     def make_literal_node(self, value: Union[str, Decimal], key: Optional[Any] = None):

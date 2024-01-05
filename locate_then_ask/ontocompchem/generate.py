@@ -57,17 +57,17 @@ class DatasetGenerator:
             entity_iri = self.seed_entities[i % len(self.seed_entities)]
             query_graph, verbalization = self.locator.locate(entity_iri)
 
-            attr_num = random.sample(population=[1, 2, 3], counts=[9, 3, 1], k=1)[0]
-            ask_datum = self.asker.ask(
+            attr_num = random.sample(population=[1, 2, 3], counts=[16, 4, 1], k=1)[0]
+            query_sparql, verbalization = self.asker.ask(
                 query_graph=query_graph, verbalization=verbalization, attr_num=attr_num
             )
 
             example = dict(
                 id=i,
-                verbalization=ask_datum.verbalization,
+                verbalization=verbalization,
                 query=dict(
-                    sparql=ask_datum.query_sparql,
-                    graph=nx.node_link_data(ask_datum.query_graph),
+                    sparql=query_sparql,
+                    graph=nx.node_link_data(query_graph),
                 ),
             )
 
