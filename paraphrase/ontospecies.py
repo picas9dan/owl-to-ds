@@ -63,7 +63,7 @@ class OSParaphraser(Paraphraser):
             entity_placeholders = [x for x in self.ENTITY_PLACEHOLDERS if x not in text]
 
             try_num = 0
-            while len(paraphrases) < 3 and try_num < 3:
+            while len(paraphrases) < 3 and try_num < self.TRY_LIMIT:
                 random.shuffle(entity_placeholders)
                 paraphrases.extend(self._paraphrase(text, entity_placeholders))
                 try_num += 1

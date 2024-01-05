@@ -107,6 +107,8 @@ class OpenAiClientForBulletPointResponse:
 
 
 class Paraphraser:
+    TRY_LIMIT = 5
+
     def __init__(
         self,
         endpoint: None,
@@ -182,7 +184,7 @@ class Paraphraser:
 
         try_num = 0
         paraphrases = []
-        while len(paraphrases) < 3 and try_num < 3:
+        while len(paraphrases) < 3 and try_num < self.TRY_LIMIT:
             _paraphrases = self.openai_client.call(text)
             _paraphrases = [x for x in _paraphrases if all(y in x for y in constants)]
             paraphrases.extend(_paraphrases)
