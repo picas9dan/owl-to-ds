@@ -1,17 +1,10 @@
-import csv
-import json
-import os
 from typing import List, Optional
 
 from openai import OpenAI
-from tqdm import tqdm
-import pandas as pd
-
-PARAPHRASE_NUM = 3
-HEADER = ["id", "verbalization", "paraphrases"]
 
 
 class OpenAiClientForBulletPointResponse:
+    PARAPHRASE_NUM = 3
     SYSTEM_PROMPT_TEMPLATE = "You will be provided with a machine-generated query. Rephrase it in {num} different ways. Additionally, keep the square brackets, tags, and their enclosing text unchanged."
 
     def __init__(
@@ -94,7 +87,9 @@ class OpenAiClientForBulletPointResponse:
             messages=[
                 {
                     "role": "user",
-                    "content": self.SYSTEM_PROMPT_TEMPLATE.format(num=PARAPHRASE_NUM)
+                    "content": self.SYSTEM_PROMPT_TEMPLATE.format(
+                        num=self.PARAPHRASE_NUM
+                    )
                     + "\n\n\n"
                     + input_text,
                 },
@@ -124,31 +119,6 @@ class Paraphraser:
             self.openai_client = OpenAiClientForBulletPointResponse(
                 endpoint, api_key, model, **openai_kwargs
             )
-
-    def paraphrase_from_file(self, filepath: str):
-        with open(filepath, "r") as f:
-            data = json.load(f)
-
-        filepath_out = filepath.rsplit(".", maxsplit=1)[0] + "_paraphrases.csv"
-        print("Writing to file: ", filepath_out)
-        if not os.path.exists(filepath_out):
-            f = open(filepath_out, "w")
-            writer = csv.writer(f)
-            writer.writerow(HEADER)
-        else:
-            df = pd.read_csv(filepath_out)
-            data = [datum for datum in data if datum["id"] not in df["id"]]
-
-            f = open(filepath_out, "a")
-            writer = csv.writer(f)
-
-        try:
-            for datum in tqdm(data):
-                paraphrases = self.paraphrase(datum["verbalization"])
-                writer.writerow([datum["id"], datum["verbalization"], paraphrases])
-        except Exception as e:
-            f.close()
-            raise e
 
     def paraphrase(self, text: str):
         constants = []
