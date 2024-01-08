@@ -1,4 +1,6 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
+import Levenshtein
+import numpy as np
 
 from openai import OpenAI
 
@@ -103,6 +105,7 @@ class OpenAiClientForBulletPointResponse:
 
 class Paraphraser:
     TRY_LIMIT = 5
+    FUZZY_TOLERANCE = 2
 
     def __init__(
         self,
@@ -120,8 +123,9 @@ class Paraphraser:
                 endpoint, api_key, model, **openai_kwargs
             )
 
-    def paraphrase(self, text: str):
-        constants = []
+    def _extract_literals(self, text: str):
+        """Extracts literals enclosed by square brackets."""
+        literals: List[str] = []
         ptr = 0
         while ptr < len(text):
             start = text.find("[", ptr)
@@ -149,18 +153,44 @@ class Paraphraser:
             if end < 0:
                 break
 
-            constants.append(text[start : end + 1])
+            literals.append(text[start : end + 1])
             ptr = end + 1
+        return tuple(literals)
+
+    def _correct_paraphrase(self, paraphrase: str, literals: Tuple[str, ...]):
+        corrected = True
+        words = paraphrase.split()
+        
+        for l in literals:
+            dists = np.array([Levenshtein.distance(w, l) for w in words])
+            idxes = np.argwhere(dists < self.FUZZY_TOLERANCE)
+            if len(idxes) != 1:
+                corrected = False
+                break
+            words[idxes[0][0]] = l
+
+        if corrected:
+            return " ".join(words)
+        else:
+            return None
+
+    def paraphrase(self, text: str):
+        literals = self._extract_literals(text)
 
         try_num = 0
         paraphrases = []
         rejected = []
         while len(paraphrases) < 3 and try_num < self.TRY_LIMIT:
             for p in self.openai_client.call(text):
-                if all(c in p for c in constants):
+                if all(l in p for l in literals):
                     paraphrases.append(p)
                 else:
-                    rejected.append(p)
+                    corrected = self._correct_paraphrase(p, literals)
+                    if corrected:
+                        print("Corrected {i} to {o}".format(i=p, o=corrected))
+                        paraphrases.append(" ".join(corrected))
+                    else:
+                        rejected.append(p)
             try_num += 1
 
         if len(paraphrases) < 3:
