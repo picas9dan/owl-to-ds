@@ -75,4 +75,4 @@ class OSParaphraser(Paraphraser):
                     )
                 )
 
-            return paraphrases
+        return paraphrases
