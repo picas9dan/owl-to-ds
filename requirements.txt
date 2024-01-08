@@ -3,5 +3,6 @@ rdflib
 networkx
 SPARQLWrapper
 tqdm
+levenshtein
 openai
 vllm
