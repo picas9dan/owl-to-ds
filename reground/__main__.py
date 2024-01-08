@@ -6,6 +6,7 @@ import random
 import pandas as pd
 import networkx as nx
 
+from reground.ontocompchem import OCCRegrounder
 from reground.ontokin import OKRegrounder
 from utils.json import as_enum
 
@@ -34,7 +35,7 @@ def remove_brackets(text: str):
         if ptr == len(text) - 1:
             text = text[:-1]
             break
-        if text[ptr + 1] in ".!/;,:?":
+        if text[ptr + 1] in ".!/;,:?'":
             text = text[:ptr] + text[ptr + 1 :]
         ptr += 2
 
@@ -61,7 +62,9 @@ if __name__ == "__main__":
     if args.domain == "ontokin":
         regrounder = OKRegrounder()
     elif args.domain == "ontocompchem":
-        pass
+        regrounder = OCCRegrounder()
+    else:
+        raise ValueError("Unexpected domain: " + args.domain)
 
     out = []
     includes_verbn_weight = 1 / (1 + sum(len(x) for x in df["paraphrases"]) / len(df))

@@ -178,8 +178,8 @@ class Paraphraser:
         literals = self._extract_literals(text)
 
         try_num = 0
-        paraphrases = []
-        rejected = []
+        paraphrases: List[str] = []
+        rejected: List[str] = []
         while len(paraphrases) < 3 and try_num < self.TRY_LIMIT:
             for p in self.openai_client.call(text):
                 if all(l in p for l in literals):

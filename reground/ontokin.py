@@ -96,11 +96,11 @@ LIMIT 100"""
                 paraphrase = replace_nlq_literal(paraphrase, old=s, new=_s)
                 _query_sparql = replace_sparql_literal(_query_sparql, old=s, new=_s)
             for e in eqns:
-                _e = random.choice(self.entities_for_regrounding["Equations"])
+                _e = random.choice(self.entities_for_regrounding["Equation"])
                 paraphrase = replace_nlq_literal(paraphrase, old=e, new=_e)
                 _query_sparql = replace_sparql_literal(_query_sparql, old=e, new=_e)
             for d in dois:
-                _d = random.choice(self.entities_for_regrounding["DOIs"])
+                _d = random.choice(self.entities_for_regrounding["DOI"])
                 paraphrase = replace_nlq_literal(paraphrase, old=d, new=_d)
                 _query_sparql = replace_sparql_literal(_query_sparql, old=d, new=_d)
 
