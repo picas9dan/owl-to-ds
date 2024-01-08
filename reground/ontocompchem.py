@@ -39,6 +39,8 @@ class OCCRegrounder(Regrounder):
             if p == "occ:hasSpeciesModel/occ:hasSpecies/rdfs:label":
                 species.append(query_graph.nodes[o]["label"])
 
+        if not any([lots, bss, species]):
+            return [(query_sparql, p) for p in paraphrases]
 
         pairs: List[Tuple[str, str]] = []
         for paraphrase in paraphrases:
