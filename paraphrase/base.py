@@ -184,16 +184,19 @@ class Paraphraser:
 
         try_num = 0
         paraphrases = []
+        rejected = []
         while len(paraphrases) < 3 and try_num < self.TRY_LIMIT:
-            _paraphrases = self.openai_client.call(text)
-            _paraphrases = [x for x in _paraphrases if all(y in x for y in constants)]
-            paraphrases.extend(_paraphrases)
+            for p in self.openai_client.call(text):
+                if all(c in p for c in constants):
+                    paraphrases.append(p)
+                else:
+                    rejected.append(p)
             try_num += 1
 
         if len(paraphrases) < 3:
             print(
-                "Unable to generate 3 faithful paraphrases.\nOriginal text: {og}\nParaphrases: {p}".format(
-                    og=text, p=paraphrases
+                "Unable to generate 3 faithful paraphrases.\nOriginal text: {og}\nParaphrases: {p}\nRejected: {rej}".format(
+                    og=text, p=paraphrases, rej=rejected
                 )
             )
 
