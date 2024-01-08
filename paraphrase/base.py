@@ -188,7 +188,7 @@ class Paraphraser:
                     corrected = self._correct_paraphrase(p, literals)
                     if corrected:
                         print("Corrected {i} to {o}".format(i=p, o=corrected))
-                        paraphrases.append(" ".join(corrected))
+                        paraphrases.append(corrected)
                     else:
                         rejected.append(p)
             try_num += 1
