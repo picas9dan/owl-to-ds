@@ -1,5 +1,5 @@
 import random
-from typing import Iterable
+from typing import Iterable, List, Tuple
 
 from .base import Paraphraser
 
@@ -17,11 +17,12 @@ class OSParaphraser(Paraphraser):
         "nonanol",
     ]
 
-    def _paraphrase(self, text: str, entity_placeholders: Iterable[str]):
-        entity_actuals = []
+    def _extract_species_labels(self, text: str):
+        labels: List[str] = []
 
+        idx = 0
         while True:
-            idx_entity_start = text.find("<entity>")
+            idx_entity_start = text.find("<entity>", idx)
             if idx_entity_start < 0:
                 break
 
@@ -31,21 +32,24 @@ class OSParaphraser(Paraphraser):
             idx_entity_end += len("</entity>")
 
             entity = text[idx_entity_start:idx_entity_end]
-            text = "{left}[{mid}]{right}".format(
-                left=text[:idx_entity_start],
-                mid=entity_placeholders[len(entity_actuals)],
-                right=text[idx_entity_end:],
-            )
-            entity_actuals.append(entity)
+            labels.append(entity)
+
+            idx = idx_entity_end + 1
+
+        return tuple(labels)
+
+    def _paraphrase(self, text: str, species_labels: Tuple[str], entity_placeholders: Iterable[str]):
+        for label, placeholder in zip(species_labels, entity_placeholders):
+            text = text.replace(label, "[{x}]".format(x=placeholder))
 
         paraphrases = super().paraphrase(text)
-        if not entity_actuals:
+        if not species_labels:
             return paraphrases
 
         processed_paraphrases = []
         for paraphrase in paraphrases:
             valid = True
-            for placeholder, actual in zip(entity_placeholders, entity_actuals):
+            for placeholder, actual in zip(entity_placeholders, species_labels):
                 processed_paraphrase = paraphrase.replace(placeholder, actual)
                 if processed_paraphrase == paraphrase:
                     valid = False
@@ -55,9 +59,20 @@ class OSParaphraser(Paraphraser):
         return processed_paraphrases
 
     def paraphrase(self, text: str):
-        _text = text.replace("<entity>", "[")
-        _text = _text.replace("</entity>", "]")
-        paraphrases = super().paraphrase(_text)
+        species_labels = self._extract_species_labels(text)
+        tag2brac = {
+            l: "[{x}]".format(x=l[len("<entity>"):-len("</entity>")]) 
+            for l in species_labels
+        }
+        for tag, brac in tag2brac.items():
+            _text = text.replace(tag, brac)
+        
+        _paraphrases = super().paraphrase(_text)
+        paraphrases = []
+        for p in _paraphrases:
+            for tag, brac in tag2brac.items():
+                p = p.replace(brac, tag)
+            paraphrases.append(p)
 
         if len(paraphrases) < 3:
             entity_placeholders = [x for x in self.ENTITY_PLACEHOLDERS if x not in text]
@@ -65,7 +80,7 @@ class OSParaphraser(Paraphraser):
             try_num = 0
             while len(paraphrases) < 3 and try_num < self.TRY_LIMIT:
                 random.shuffle(entity_placeholders)
-                paraphrases.extend(self._paraphrase(text, entity_placeholders))
+                paraphrases.extend(self._paraphrase(text, species_labels, entity_placeholders))
                 try_num += 1
 
             if len(paraphrases) < 3:
