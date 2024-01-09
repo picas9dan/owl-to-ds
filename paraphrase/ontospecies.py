@@ -6,15 +6,15 @@ from .base import Paraphraser
 
 class OSParaphraser(Paraphraser):
     ENTITY_PLACEHOLDERS = [
-        "methanol",
-        "ethanol",
-        "propanol",
-        "butanol",
-        "pentanol",
-        "hexanol",
-        "heptanol",
-        "octanol",
-        "nonanol",
+        "[methanol]",
+        "[ethanol]",
+        "[propanol]",
+        "[butanol]",
+        "[pentanol]",
+        "[hexanol]",
+        "[heptanol]",
+        "[octanol]",
+        "[nonanol]",
     ]
 
     def _extract_species_labels(self, text: str):
@@ -40,7 +40,7 @@ class OSParaphraser(Paraphraser):
 
     def _paraphrase(self, text: str, species_labels: Tuple[str], entity_placeholders: Iterable[str]):
         for label, placeholder in zip(species_labels, entity_placeholders):
-            text = text.replace(label, "[{x}]".format(x=placeholder))
+            text = text.replace(label, placeholder)
 
         paraphrases = super().paraphrase(text)
         if not species_labels:
@@ -64,8 +64,9 @@ class OSParaphraser(Paraphraser):
             l: "[{x}]".format(x=l[len("<entity>"):-len("</entity>")]) 
             for l in species_labels
         }
+        _text = text
         for tag, brac in tag2brac.items():
-            _text = text.replace(tag, brac)
+            _text = _text.replace(tag, brac)
         
         _paraphrases = super().paraphrase(_text)
         paraphrases = []
