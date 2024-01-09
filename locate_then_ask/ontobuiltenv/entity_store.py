@@ -43,6 +43,9 @@ class OBEEntityStore:
         market_value = self.retrieve_omMeasure_byPredicate(
             entity_iri, predicate="obe:hasMarketValue/om:hasValue"
         )
+        latest_transaction_record = self.retrieve_str_byPredicate(
+            entity_iri, predicate="obe:hasLatestTransactionRecord"
+        )
         ground_elevation = self.retrieve_omMeasure_byPredicate(
             entity_iri, predicate="obe:hasGroundElevation/om:hasValue"
         )
@@ -60,6 +63,7 @@ class OBEEntityStore:
             property_usage=property_usage,
             total_floor_area=total_floor_area,
             market_value=market_value,
+            latest_transaction_record=latest_transaction_record,
             ground_elevation=ground_elevation,
         )
 

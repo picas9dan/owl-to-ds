@@ -15,6 +15,8 @@ from .number_of_habitable_rooms import OBENumOfHabitableRoomsLocator
 from .property_type import OBEPropertyTypeLocator
 from .property_usage import OBEPropertyUsageLocator
 from .total_floor_area import OBETotalFloorAreaLocator
+from .latest_epc import OBELatestEPCLocator
+from .latest_transaction_record import OBELatestTransactionRecordLocator
 
 
 class OBELocator:
@@ -24,11 +26,13 @@ class OBELocator:
             OBEAttrKey.ADDRESS: OBEAddressLocator(),
             OBEAttrKey.BUILT_FORM: OBEBuiltFormLocator(),
             OBEAttrKey.ENERGY_RATING: OBEEnergyRatingLocator(),
+            OBEAttrKey.LATEST_EPC: OBELatestEPCLocator(),
             OBEAttrKey.NUMBER_OF_HABITABLE_ROOMS: OBENumOfHabitableRoomsLocator(),
             OBEAttrKey.PROPERTY_TYPE: OBEPropertyTypeLocator(),
             OBEAttrKey.PROPERTY_USAGE: OBEPropertyUsageLocator(),
             OBEAttrKey.TOTAL_FLOOR_AREA: OBETotalFloorAreaLocator(),
             OBEAttrKey.MARKET_VALUE: OBEMarketValueLocator(),
+            OBEAttrKey.LATEST_TRANSACTION_RECORD: OBELatestTransactionRecordLocator(),
             OBEAttrKey.GROUND_ELEVATION: OBEGroundElevationLocator(),
         }
 

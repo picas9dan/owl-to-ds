@@ -33,7 +33,7 @@ class OBEProperty:
     # construction_date: Optional[str]            # obe:hasConstructionDate 0..1
     energy_rating: Optional[str]                # obe:hasEnegyRating 0..1
     # identifier: Optional[str]                   # obe:hasIdentifier 0..1
-    # latest_epc: Optional[str]                   # obe:hasLatestEPC 0..1
+    latest_epc: Optional[str]                   # obe:hasLatestEPC 0..1
     number_of_habitable_rooms: Optional[Decimal]    # obe:hasNumberOfHabitableRooms 0..1
     property_type: Optional[str]                # obe:hasPropertyType/a 0..1
     property_usage: Tuple[OBEPropertyUsage, ...]      # obe:hasPropertyUsage 0..2
@@ -41,7 +41,7 @@ class OBEProperty:
     # is_in: Optional[str]                        # obe:isIn 0..1
     # located_in: Optional[str]                   # obe:locatedIn 0..1
     market_value: Optional[OmMeasure]           # obe:hasMarketValue/om:hasValue 0..1
-    # latest_transaction_record: Optional[str]    # obe:hasLatestTransactionRecord 0..1
+    latest_transaction_record: Optional[str]    # obe:hasLatestTransactionRecord 0..1
     ground_elevation: Optional[OmMeasure]       # obe:hasGroundElevation/om:hasValue, only for dabgeo:Building
 
     def __post_init__(self):
