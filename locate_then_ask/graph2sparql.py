@@ -131,8 +131,19 @@ class Graph2Sparql:
         ]
 
         def resolve_proj(n: str):
-            if query_graph.nodes[n].get("count"):
+            do_count = query_graph.nodes[n].get("count")
+            agg = query_graph.nodes[n].get("agg")
+            assert not (do_count and agg)
+
+            if do_count:
                 return "(COUNT(?{n}) AS ?{n}Count)".format(n=n)
+            
+            if agg:
+                if agg == "avg":
+                    return "(AVG(?{n}) AS ?{n}Avg)".format(n=n)
+                else:
+                    raise AssertionError("Unexpected agg argument: " + agg)
+            
             return "?" + n
 
         return "SELECT " + " ".join([resolve_proj(n) for n in question_nodes])

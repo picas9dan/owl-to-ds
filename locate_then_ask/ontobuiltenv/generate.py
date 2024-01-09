@@ -19,12 +19,8 @@ SEED_ENTITIES_FILEPATH = "data/seed_entities/ontobuiltenv.txt"
 
 class OBEDatasetGenerator:
     LOCATE2ASK = {
-        "concept_name": (["name", "count"], [1, 1]),
-        "concept_and_literal": (["name", "count", "attribute"], [1, 1, 6]),
-    }
-    LOCATE2MASS = {
-        "concept_name": 1,
-        "concept_and_literal": 99
+        "concept_name": (["name", "count", "agg"], [1, 1, 3]),
+        "concept_and_literal": (["name", "count", "attribute", "agg"], [1, 1, 6, 3]),
     }
 
     @classmethod
@@ -34,7 +30,7 @@ class OBEDatasetGenerator:
         kg_client = KgClient(
             "http://165.232.172.16:3838/blazegraph/namespace/kingslynn/sparql"
         )
-        
+
         iris: List[str] = []
 
         query_template_by_use = """PREFIX dabgeo: <http://www.purl.org/oema/infrastructure/>
@@ -50,9 +46,7 @@ ORDER BY DESC(?degree)
 LIMIT {num}"""
 
         for use in OBE_PROPERTYUSAGE_LABELS.keys():
-            query = query_template_by_use.format(
-                PropertyUsage=use, num=20
-            )
+            query = query_template_by_use.format(PropertyUsage=use, num=20)
             bindings = kg_client.query(query)["results"]["bindings"]
             iris.extend(x["x"]["value"] for x in bindings)
 
@@ -100,18 +94,38 @@ LIMIT {num}"""
         examples = []
 
         for i, entity in enumerate(tqdm(self.seed_entities)):
-            locate_strategy = random.sample(["concept_name", "concept_and_literal"], counts=[1, 99], k=1)[0]
+            locate_strategy = random.sample(
+                ["concept_name", "concept_and_literal"], counts=[1, 99], k=1
+            )[0]
 
             if locate_strategy == "concept_name":
                 query_graph, verbn = self.locator.locate_concept_name(entity)
+
+                ask_strategies = ["name", "count", "agg"]
+                ask_strategy_counts = [1, 1, 3]
             elif locate_strategy == "concept_and_literal":
-                cond_num = random.sample([1, 2, 3, 4, 5], counts=[1, 2, 3, 2, 1], k=1)[0]
-                query_graph, verbn = self.locator.locate_concept_and_literal_multi(entity, cond_num=cond_num)
+                cond_num = random.sample([1, 2, 3, 4, 5], counts=[1, 2, 3, 2, 1], k=1)[
+                    0
+                ]
+                query_graph, verbn = self.locator.locate_concept_and_literal_multi(
+                    entity, cond_num=cond_num
+                )
+
+                sampled_attr_keys = tuple(
+                    key for _, key in query_graph.nodes(data="key") if key is not None
+                )
+                if not all(k in sampled_attr_keys for k in OBEAsker.KEYS_FOR_AVG):
+                    ask_strategies = ["name", "count", "attribute", "agg"]
+                    ask_strategy_counts = [1, 1, 6, 3]
+                else:
+                    ask_strategies = ["name", "count", "attribute"]
+                    ask_strategy_counts = [1, 1, 6]
             else:
                 raise ValueError("Unexpected locate strategy: " + locate_strategy)
-            
-            ask_strategies, counts = self.LOCATE2ASK[locate_strategy]
-            ask_strategy = random.sample(ask_strategies, counts=counts, k=1)[0]
+
+            ask_strategy = random.sample(
+                ask_strategies, counts=ask_strategy_counts, k=1
+            )[0]
 
             if ask_strategy == "name":
                 query_sparql, verbn = self.asker.ask_name(query_graph, verbn)
@@ -119,10 +133,12 @@ LIMIT {num}"""
                 query_sparql, verbn = self.asker.ask_count(query_graph, verbn)
             elif ask_strategy == "attribute":
                 attr_num = random.sample([1, 2, 3], counts=[3, 2, 1], k=1)[0]
-                query_sparql, verbn = self.asker.ask_attrs(query_graph, verbn, attr_num=attr_num)
+                query_sparql, verbn = self.asker.ask_attrs(
+                    query_graph, verbn, attr_num=attr_num
+                )
             else:
                 raise ValueError("Unexpected ask strategy: " + ask_strategy)
-            
+
             example = dict(
                 id=i,
                 domain="ontobuiltenv",

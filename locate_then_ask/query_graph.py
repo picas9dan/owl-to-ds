@@ -71,8 +71,8 @@ class QueryGraph(nx.DiGraph):
         )
         self.add_edge(target_node, func_node, label="func")
 
-    def add_question_node(self, n: str, count: bool = False):
-        self.add_node(n, question_node=True, count=count)
+    def add_question_node(self, n: str, count: bool = False, agg: Optional[str] = None):
+        self.add_node(n, question_node=True, count=count, agg=agg)
 
     def add_triple(self, s: str, p: str, o: str):
         self.add_edge(s, o, label=p)
