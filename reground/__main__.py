@@ -8,6 +8,7 @@ import networkx as nx
 
 from reground.ontocompchem import OCCRegrounder
 from reground.ontokin import OKRegrounder
+from reground.reground import IdentityRegrounder
 from utils.json import as_enum
 
 
@@ -63,6 +64,8 @@ if __name__ == "__main__":
         regrounder = OKRegrounder()
     elif args.domain == "ontocompchem":
         regrounder = OCCRegrounder()
+    elif args.domain in ["ontospecies", "ontobuiltenv"]:
+        regrounder = IdentityRegrounder()
     else:
         raise ValueError("Unexpected domain: " + args.domain)
 
@@ -93,6 +96,7 @@ if __name__ == "__main__":
             [
                 dict(
                     id="{id}_{num}".format(id=datum["id"], num=i),
+                    domain=args.domain,
                     question=remove_brackets(nlq),
                     query=dict(sparql=sparql),
                 )
