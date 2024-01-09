@@ -109,7 +109,7 @@ class Paraphraser:
 
     def __init__(
         self,
-        endpoint: None,
+        endpoint: Optional[str] = None,
         api_key: Optional[str] = None,
         model: str = "gpt-4-0613",
         openai_kwargs: Optional[dict] = None,
@@ -159,18 +159,28 @@ class Paraphraser:
 
     def _correct_paraphrase(self, paraphrase: str, literals: Tuple[str, ...]):
         corrected = True
-        words = paraphrase.split()
         
         for l in literals:
-            dists = np.array([Levenshtein.distance(w, l) for w in words])
+            _l = l
+            if _l.startswith("["):
+                _l = _l[1:]
+            if _l.endswith("]"):
+                _l = _l[:-1]
+            _l = _l.strip()
+            w_num = len(_l.split())
+
+            words = paraphrase.split()
+            candidates = [words[i: i + w_num] for i in range(len(words) - w_num)]
+            dists = np.array([Levenshtein.distance(" ".join(c), _l) for c in candidates])
             idxes = np.argwhere(dists < self.FUZZY_TOLERANCE)
             if len(idxes) != 1:
                 corrected = False
                 break
-            words[idxes[0][0]] = l
+            idx = idxes[0][0]
+            paraphrase = "{pre} {mid} {post}".format(pre=" ".join(words[:idx]), mid=l, post=" ".join(words[idx + w_num:]))
 
         if corrected:
-            return " ".join(words)
+            return paraphrase
         else:
             return None
 
