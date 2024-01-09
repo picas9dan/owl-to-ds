@@ -171,7 +171,7 @@ class Paraphraser:
 
             words = paraphrase.split()
             candidates = [words[i: i + w_num] for i in range(len(words) - w_num)]
-            dists = np.array([Levenshtein.distance(" ".join(c), _l) for c in candidates])
+            dists = np.array([Levenshtein.distance(" ".join(c).lower(), _l.lower()) for c in candidates])
             idxes = np.argwhere(dists < self.FUZZY_TOLERANCE)
             if len(idxes) != 1:
                 corrected = False
@@ -197,7 +197,7 @@ class Paraphraser:
                 else:
                     corrected = self._correct_paraphrase(p, literals)
                     if corrected:
-                        print("Corrected {i} to {o}".format(i=p, o=corrected))
+                        print("Successful correction.\nFrom: {i}\nTo:{o}\n".format(i=p, o=corrected))
                         paraphrases.append(corrected)
                     else:
                         rejected.append(p)
@@ -205,7 +205,7 @@ class Paraphraser:
 
         if len(paraphrases) < 3:
             print(
-                "Unable to generate 3 faithful paraphrases.\nOriginal text: {og}\nParaphrases: {p}\nRejected: {rej}".format(
+                "Unable to generate 3 faithful paraphrases.\nOriginal text: {og}\nParaphrases: {p}\nRejected: {rej}\n".format(
                     og=text, p=paraphrases, rej=rejected
                 )
             )
