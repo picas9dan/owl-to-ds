@@ -11,6 +11,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output_dir", type=str, required=True)
     parser.add_argument("--datasets", nargs="+", required=True)
+    parser.add_argument("--test_frac", type=float, default=0.1)
+    parser.add_argument("--dev_frac", type=float, default=0.1)
     args = parser.parse_args()
 
     split2data = dict(test=[], dev=[], train=[])
@@ -20,8 +22,8 @@ def main():
         dataset = np.array(dataset)
 
         idxes = np.arange(len(dataset))
-        test_size = len(idxes) // 10
-        dev_size = len(idxes) // 10
+        test_size = int(len(idxes) * args.test_frac)
+        dev_size = int(len(idxes) * args.dev_frac)
 
         split2idxes = dict(
             test=idxes[:test_size],
