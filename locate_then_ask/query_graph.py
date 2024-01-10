@@ -1,9 +1,15 @@
+from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Iterable, Optional, Tuple, Union
+from typing import Any, Iterable, List, Optional, Tuple, Union
 import networkx as nx
 
 from constants.functions import AggOp, NumOp, StrOp
 
+
+@dataclass
+class OrderCond:
+    desc: int = False
+    var: str
 
 class QueryGraph(nx.DiGraph):
     _LITERAL_PREFIX = "Literal_"
@@ -18,6 +24,11 @@ class QueryGraph(nx.DiGraph):
     @classmethod
     def is_blank_node(cls, n: str):
         return n.startswith(cls._BN_PREFIX)
+
+    def __init__(self):
+        self.groupby_vars: List[str] = []
+        self.order_conds: List[OrderCond] = []
+        self.limit: Optional[int] = None
 
     def get_preds(self, subj: str):
         return [p for u, _, p in self.edges(data="label") if u == subj]
@@ -79,3 +90,12 @@ class QueryGraph(nx.DiGraph):
 
     def add_triples(self, triples: Iterable[Tuple[str, str, str]]):
         self.add_edges_from([(s, o, dict(label=p)) for s, p, o in triples])
+
+    def add_groupby(self, n: str):
+        self.groupby_vars.append(n)
+
+    def add_orderby(self, n: str, desc: bool = False):
+        self.order_conds.append(OrderCond(desc=desc, var=n))
+
+    def set_limit(self, limit: int):
+        self.limit = limit

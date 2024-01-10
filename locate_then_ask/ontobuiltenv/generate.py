@@ -114,7 +114,7 @@ LIMIT {num}"""
                 sampled_attr_keys = tuple(
                     key for _, key in query_graph.nodes(data="key") if key is not None
                 )
-                if not all(k in sampled_attr_keys for k in OBEAsker.KEYS_FOR_AVG):
+                if not all(k in sampled_attr_keys for k in OBEAsker.KEYS_FOR_AGG):
                     ask_strategies = ["name", "count", "attribute", "agg"]
                     ask_strategy_counts = [1, 1, 6, 3]
                 else:

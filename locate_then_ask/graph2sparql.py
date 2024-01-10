@@ -6,6 +6,7 @@ from locate_then_ask.query_graph import QueryGraph
 
 QuerySparl = str
 
+
 class Graph2Sparql:
     def _resolve_node_to_sparql(self, query_graph: QueryGraph, n: str):
         if not query_graph.nodes[n].get("template_node"):
@@ -91,10 +92,14 @@ class Graph2Sparql:
                 raise ValueError("Unexpected operator: " + str(operator))
         if query_graph.nodes[o].get("blank_node"):
             p_sparql = p
-            tails = " ; ".join([
-                "{p} {o}".format(p=_p, o=self._resolve_node_to_sparql(query_graph, n=_o))
-                for _, _o, _p in query_graph.out_edges(o, data="label")
-            ])
+            tails = " ; ".join(
+                [
+                    "{p} {o}".format(
+                        p=_p, o=self._resolve_node_to_sparql(query_graph, n=_o)
+                    )
+                    for _, _o, _p in query_graph.out_edges(o, data="label")
+                ]
+            )
             o_sparql = "[ {tails} ]".format(tails=tails)
         else:
             p_sparql = p
@@ -137,7 +142,7 @@ class Graph2Sparql:
 
             if do_count:
                 return "(COUNT(?{n}) AS ?{n}Count)".format(n=n)
-            
+
             if agg:
                 if agg is AggOp.AVG:
                     return "(AVG(?{n}) AS ?{n}Avg)".format(n=n)
@@ -147,17 +152,44 @@ class Graph2Sparql:
                     return "(MAX(?{n}) AS ?{n}Max)".format(n=n)
                 else:
                     raise AssertionError("Unexpected agg argument: " + agg)
-            
+
             return "?" + n
 
         return "SELECT " + " ".join([resolve_proj(n) for n in question_nodes])
 
+    def make_groupby_clause(self, query_graph: QueryGraph):
+        if not query_graph.groupby_vars:
+            return None
+        return "GROUP BY " + " ".join("?" + x for x in query_graph.groupby_vars)
+
+    def make_order_clause(self, query_graph: QueryGraph):
+        if not query_graph.order_conds:
+            return None
+        return "ORDER BY " + " ".join(
+            "DESC(?{n})".format(n=order_cond.var)
+            if order_cond.desc
+            else "?" + order_cond.var
+            for order_cond in query_graph.order_conds
+        )
+    
+    def make_limit_clause(self, query_graph: QueryGraph):
+        if not query_graph.limit:
+            return None
+        return "LIMIT " + str(query_graph.limit)
+
     def convert(self, query_graph: QueryGraph):
         select_clause = self.make_select_clause(query_graph)
         where_clause = self.make_where_clause(query_graph)
+        groupby_clause = self.make_groupby_clause(query_graph)
+        order_clause = self.make_order_clause(query_graph)
+        limit_clause = self.make_limit_clause(query_graph)
 
-        sparql = "{SELECT} {WHERE}".format(
-            SELECT=select_clause, WHERE=where_clause
-        )
+        sparql = "{SELECT} {WHERE}".format(SELECT=select_clause, WHERE=where_clause)
+        if groupby_clause:
+            sparql  += groupby_clause
+        if order_clause:
+            sparql += order_clause
+        if limit_clause:
+            sparql += limit_clause
 
         return QuerySparl(sparql)

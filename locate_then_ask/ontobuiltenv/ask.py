@@ -7,7 +7,7 @@ from locate_then_ask.query_graph import QueryGraph
 
 
 class OBEAsker:
-    KEYS_FOR_AVG = [
+    KEYS_FOR_AGG = [
         OBEAttrKey.TOTAL_FLOOR_AREA,
         OBEAttrKey.MARKET_VALUE,
         OBEAttrKey.GROUND_ELEVATION,
@@ -99,7 +99,7 @@ class OBEAsker:
             isinstance(key, OBEAttrKey) for key in sampled_attr_keys
         ), sampled_attr_keys
 
-        candidates = [k for k in self.KEYS_FOR_AVG if k not in sampled_attr_keys]
+        candidates = [k for k in self.KEYS_FOR_AGG if k not in sampled_attr_keys]
         assert len(candidates) > 0
 
         verbns = []
@@ -116,7 +116,9 @@ class OBEAsker:
             )
 
             agg_num_values = range(1, len(AggOp) + 1)
-            agg_num = random.sample(agg_num_values, counts=reversed(agg_num_values), k=1)[0]
+            agg_num = random.sample(
+                agg_num_values, counts=reversed(agg_num_values), k=1
+            )[0]
             for agg in random.sample(tuple(AggOp), k=agg_num):
                 query_graph.add_question_node(value_node, agg=agg)
 
@@ -137,6 +139,49 @@ class OBEAsker:
         verbalization = template.format(
             attrs=" and ".join(verbns),
             located=verbalization,
+        )
+
+        return query_sparql, verbalization
+
+    def ask_selectAmong(
+        self, query_graph: QueryGraph, verbalization: str, limit: int = 1
+    ):
+        sampled_attr_keys = tuple(
+            key for _, key in query_graph.nodes(data="key") if key is not None
+        )
+        assert all(
+            isinstance(key, OBEAttrKey) for key in sampled_attr_keys
+        ), sampled_attr_keys
+
+        candidates = [k for k in self.KEYS_FOR_AGG if k not in sampled_attr_keys]
+        assert len(candidates) > 0
+
+        key = random.choice(candidates)
+        modifier = random.choice([AggOp.MIN, AggOp.MAX])
+
+        bn = query_graph.make_blank_node()
+        value_node = key.value + "NumericalValue"
+        unit = query_graph.add_iri_node("om:poundSterling", prefixed=True)
+        query_graph.add_triples(
+            [
+                ("Property", "obe:has{key}/om:hasValue".format(key=key.value), bn),
+                (bn, "om:hasNumericalValue", value_node),
+                (bn, "om:hasUnit", unit),
+            ]
+        )
+        query_graph.add_question_node("Property")
+
+        query_graph.add_groupby("Property")
+        query_graph.add_orderby(value_node, desc=modifier is AggOp.MAX)
+        query_graph.set_limit(limit)
+
+        query_sparql = self.graph2sparql.convert(query_graph)
+        template = "What are the {limit} {located} with the {modifier} {attr}"
+        verbalization = template.format(
+            limit=limit,
+            located=verbalization,
+            modifier=random.choice(AGG_OP_LABELS[modifier]),
+            attr=random.choice(OBE_ATTR_LABELS[key]),
         )
 
         return query_sparql, verbalization
