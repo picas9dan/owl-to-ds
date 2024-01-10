@@ -91,7 +91,7 @@ class OBEAsker:
 
         return query_sparql, verbalization
 
-    def ask_agg(self, query_graph: QueryGraph, verbalization: str):
+    def ask_agg(self, query_graph: QueryGraph, verbalization: str, attr_num: int = 1):
         sampled_attr_keys = tuple(
             key for _, key in query_graph.nodes(data="key") if key is not None
         )
@@ -102,20 +102,28 @@ class OBEAsker:
         candidates = [k for k in self.KEYS_FOR_AVG if k not in sampled_attr_keys]
         assert len(candidates) > 0
 
-        key = random.choice(candidates)
-        agg = random.choice(tuple(AggOp))
+        verbns = []
+        for key in random.sample(candidates, k=min(len(candidates, attr_num))):
+            agg = random.choice(tuple(AggOp))
 
-        bn = query_graph.make_blank_node()
-        value_node = key.value + "NumericalValue"
-        unit = query_graph.add_iri_node("om:poundSterling", prefixed=True)
-        query_graph.add_triples(
-            [
-                ("Property", "obe:has{key}/om:hasValue".format(key=key.value), bn),
-                (bn, "om:hasNumericalValue", value_node),
-                (bn, "om:hasUnit", unit),
-            ]
-        )
-        query_graph.add_question_node(value_node, agg=agg)
+            bn = query_graph.make_blank_node()
+            value_node = key.value + "NumericalValue"
+            unit = query_graph.add_iri_node("om:poundSterling", prefixed=True)
+            query_graph.add_triples(
+                [
+                    ("Property", "obe:has{key}/om:hasValue".format(key=key.value), bn),
+                    (bn, "om:hasNumericalValue", value_node),
+                    (bn, "om:hasUnit", unit),
+                ]
+            )
+            query_graph.add_question_node(value_node, agg=agg)
+
+            template = "{modifier} {attr}"
+            verbn = template.format(
+                modifier=random.choice(random.choice(AGG_OP_LABELS[agg])),
+                attrs=random.choice(OBE_ATTR_LABELS[key]),
+            )
+            verbns.append(verbn)
 
         query_sparql = self.graph2sparql.convert(query_graph)
         template = random.choice(
@@ -125,10 +133,7 @@ class OBEAsker:
             ]
         )
         verbalization = template.format(
-            attrs="{modifier} {attrs}".format(
-                modifier=random.choice(random.choice(AGG_OP_LABELS[agg])),
-                attrs=random.choice(OBE_ATTR_LABELS[key]),
-            ),
+            attrs=" and ".join(verbns),
             located=verbalization,
         )
 
