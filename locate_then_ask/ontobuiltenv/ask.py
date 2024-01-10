@@ -48,10 +48,30 @@ class OBEAsker:
         unsampled_attr_keys = tuple(x for x in OBEAttrKey if x not in sampled_attr_keys)
         verbns = []
         for key in random.sample(unsampled_attr_keys, k=attr_num):
-            query_graph.add_question_node(key.value)
-            query_graph.add_triple("Property", "obe:has" + key.value, key.value)
+            if key is OBEAttrKey.ADDRESS:
+                q = random.choice(["address", "postalcode", "street"])
+                if q == "address":
+                    query_graph.add_question_node("Address")
+                    query_graph.add_triple("Property", "obe:hasAddress", "Address")
 
-            verbns.append(random.choice(OBE_ATTR_LABELS[key]))
+                    verbns.append(random.choice(OBE_ATTR_LABELS[key]))
+                elif q == "postalcode":
+                    query_graph.add_question_node("PostalCode")
+                    query_graph.add_triple("Property", "obe:hasAddress/obe:hasPostalCode", "PostalCode")
+
+                    verbns.append("postal code")
+                elif q == "street":
+                    query_graph.add_question_node("Street")
+                    query_graph.add_triple("Property", "obe:hasAddress/ict:hasStreet", "Street")
+
+                    verbns.append("street")
+                else:
+                    raise Exception("Unexpected value: " + q)
+            else:
+                query_graph.add_question_node(key.value)
+                query_graph.add_triple("Property", "obe:has" + key.value, key.value)
+
+                verbns.append(random.choice(OBE_ATTR_LABELS[key]))
 
         query_sparql = self.graph2sparql.convert(query_graph)
         template = random.choice(
