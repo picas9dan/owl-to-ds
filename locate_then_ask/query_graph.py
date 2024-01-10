@@ -2,7 +2,7 @@ from decimal import Decimal
 from typing import Any, Iterable, Optional, Tuple, Union
 import networkx as nx
 
-from constants.functions import NumOp, StrOp
+from constants.functions import AggOp, NumOp, StrOp
 
 
 class QueryGraph(nx.DiGraph):
@@ -71,7 +71,7 @@ class QueryGraph(nx.DiGraph):
         )
         self.add_edge(target_node, func_node, label="func")
 
-    def add_question_node(self, n: str, count: bool = False, agg: Optional[str] = None):
+    def add_question_node(self, n: str, count: bool = False, agg: Optional[AggOp] = None):
         self.add_node(n, question_node=True, count=count, agg=agg)
 
     def add_triple(self, s: str, p: str, o: str):

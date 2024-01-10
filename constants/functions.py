@@ -15,3 +15,14 @@ PRIMITIVE_NUM_OPS = [NumOp.LESS_THAN, NumOp.GREATER_THAN, NumOp.LESS_THAN_EQUAL,
 
 class StrOp(Enum):
     VALUES = "values"
+
+class AggOp(Enum):
+    MIN = "min"
+    MAX = "max"
+    AVG = "avg"
+
+AGG_OP_LABELS = {
+    AggOp.MIN: ["minimum", "lowest"],
+    AggOp.MAX: ["maximum", "highest"],
+    AggOp.AVG: ["average"]
+}

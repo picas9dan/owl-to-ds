@@ -1,6 +1,6 @@
 from typing import List
 import networkx as nx
-from constants.functions import NumOp, StrOp
+from constants.functions import AggOp, NumOp, StrOp
 
 from locate_then_ask.query_graph import QueryGraph
 
@@ -139,8 +139,12 @@ class Graph2Sparql:
                 return "(COUNT(?{n}) AS ?{n}Count)".format(n=n)
             
             if agg:
-                if agg == "avg":
+                if agg is AggOp.AVG:
                     return "(AVG(?{n}) AS ?{n}Avg)".format(n=n)
+                elif agg is AggOp.MIN:
+                    return "(MIN(?{n}) AS ?{n}Min)".format(n=n)
+                elif agg is AggOp.MAX:
+                    return "(MAX(?{n}) AS ?{n}Max)".format(n=n)
                 else:
                     raise AssertionError("Unexpected agg argument: " + agg)
             

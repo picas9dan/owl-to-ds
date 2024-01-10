@@ -1,4 +1,5 @@
 import random
+from constants.functions import AGG_OP_LABELS, AggOp
 
 from constants.ontobuiltenv import OBE_ATTR_LABELS, OBEAttrKey
 from locate_then_ask.graph2sparql import Graph2Sparql
@@ -57,12 +58,16 @@ class OBEAsker:
                     verbns.append(random.choice(OBE_ATTR_LABELS[key]))
                 elif q == "postalcode":
                     query_graph.add_question_node("PostalCode")
-                    query_graph.add_triple("Property", "obe:hasAddress/obe:hasPostalCode", "PostalCode")
+                    query_graph.add_triple(
+                        "Property", "obe:hasAddress/obe:hasPostalCode", "PostalCode"
+                    )
 
                     verbns.append("postal code")
                 elif q == "street":
                     query_graph.add_question_node("Street")
-                    query_graph.add_triple("Property", "obe:hasAddress/ict:hasStreet", "Street")
+                    query_graph.add_triple(
+                        "Property", "obe:hasAddress/ict:hasStreet", "Street"
+                    )
 
                     verbns.append("street")
                 else:
@@ -98,6 +103,7 @@ class OBEAsker:
         assert len(candidates) > 0
 
         key = random.choice(candidates)
+        agg = random.choice(tuple(AggOp))
 
         bn = query_graph.make_blank_node()
         value_node = key.value + "NumericalValue"
@@ -109,7 +115,7 @@ class OBEAsker:
                 (bn, "om:hasUnit", unit),
             ]
         )
-        query_graph.add_question_node(value_node, agg="avg")
+        query_graph.add_question_node(value_node, agg=agg)
 
         query_sparql = self.graph2sparql.convert(query_graph)
         template = random.choice(
@@ -119,7 +125,10 @@ class OBEAsker:
             ]
         )
         verbalization = template.format(
-            attrs="average " + random.choice(OBE_ATTR_LABELS[key]),
+            attrs="{modifier} {attrs}".format(
+                modifier=random.choice(random.choice(AGG_OP_LABELS[agg])),
+                attrs=random.choice(OBE_ATTR_LABELS[key]),
+            ),
             located=verbalization,
         )
 
