@@ -1,5 +1,5 @@
 import random
-from constants.functions import AGG_OP_LABELS, AggOp
+from constants.functions import AGG_OP_LABELS, EXTREMUM_LABELS, AggOp
 
 from constants.ontobuiltenv import OBE_ATTR_LABELS, OBEAttrKey
 from locate_then_ask.graph2sparql import Graph2Sparql
@@ -182,6 +182,39 @@ class OBEAsker:
             located=verbalization,
             modifier=random.choice(AGG_OP_LABELS[modifier]),
             attr=random.choice(OBE_ATTR_LABELS[key]),
+        )
+
+        return query_sparql, verbalization
+
+    def ask_attr_byEntityFreq(
+        self, query_graph: QueryGraph, verbalization: str, limit: int = 1
+    ):
+        sampled_attr_keys = tuple(
+            key for _, key in query_graph.nodes(data="key") if key is not None
+        )
+        assert all(
+            isinstance(key, OBEAttrKey) for key in sampled_attr_keys
+        ), sampled_attr_keys
+
+        unsampled_attr_keys = tuple(x for x in OBEAttrKey if x not in sampled_attr_keys)
+
+        key = random.sample(unsampled_attr_keys)
+        modifier = random.sample([AggOp.MIN, AggOp.MAX])
+
+        query_graph.add_triple("Property", "obe:has" + key.value, key.value)
+        query_graph.add_question_node(key.value)
+        query_graph.add_question_node("Property", count=True)
+        query_graph.add_groupby(key.value)
+        query_graph.add_orderby("PropertyCount", desc=modifier is AggOp.MAX)
+        query_graph.set_limit(limit)
+
+        query_sparql = self.graph2sparql.convert(query_graph)
+        template = "What are the {limit} {modifier} {attr} among {located}"
+        verbalization = template.format(
+            limit=limit,
+            modifier=random.choice(EXTREMUM_LABELS[key]),
+            attr=random.choice(OBE_ATTR_LABELS[key]),
+            located=verbalization,
         )
 
         return query_sparql, verbalization
