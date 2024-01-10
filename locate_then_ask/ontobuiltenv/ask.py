@@ -104,8 +104,6 @@ class OBEAsker:
 
         verbns = []
         for key in random.sample(candidates, k=min(len(candidates, attr_num))):
-            agg = random.choice(tuple(AggOp))
-
             bn = query_graph.make_blank_node()
             value_node = key.value + "NumericalValue"
             unit = query_graph.add_iri_node("om:poundSterling", prefixed=True)
@@ -116,14 +114,18 @@ class OBEAsker:
                     (bn, "om:hasUnit", unit),
                 ]
             )
-            query_graph.add_question_node(value_node, agg=agg)
 
-            template = "{modifier} {attr}"
-            verbn = template.format(
-                modifier=random.choice(random.choice(AGG_OP_LABELS[agg])),
-                attrs=random.choice(OBE_ATTR_LABELS[key]),
-            )
-            verbns.append(verbn)
+            agg_num_values = range(1, len(AggOp) + 1)
+            agg_num = random.sample(agg_num_values, counts=reversed(agg_num_values), k=1)[0]
+            for agg in random.sample(tuple(AggOp), k=agg_num):
+                query_graph.add_question_node(value_node, agg=agg)
+
+                template = "{modifier} {attr}"
+                verbn = template.format(
+                    modifier=random.choice(random.choice(AGG_OP_LABELS[agg])),
+                    attrs=random.choice(OBE_ATTR_LABELS[key]),
+                )
+                verbns.append(verbn)
 
         query_sparql = self.graph2sparql.convert(query_graph)
         template = random.choice(
