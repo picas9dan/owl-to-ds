@@ -38,7 +38,7 @@ AGG_OP_LABELS = {
 }
 
 
-EXTREMUM_LABELS = {
+EXTREME_FREQ_LABELS = {
     AggOp.MIN: ["least common", "least popular", "rarest"],
     AggOp.MAX: ["most common", "most popular", "dominant"],
 }
