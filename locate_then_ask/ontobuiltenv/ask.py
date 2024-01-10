@@ -236,7 +236,7 @@ class OBEAsker:
         )
 
         qn_key = random.choice([x for x in self._find_unsampled_keys() if x is not extr_attr_key])
-        self._ask_attr(query_graph, qn_key)
+        qn_attr_verbn = self._ask_attr(query_graph, qn_key)
         query_graph.add_groupby(qn_key.value)
         query_graph.add_orderby(value_node, desc=modifier is AggOp.MAX)
         query_graph.set_limit(limit)
@@ -245,7 +245,7 @@ class OBEAsker:
         template = "What are the {limit} {qn_attr} of {located} with the {modifier} {attr}"
         verbalization = template.format(
             limit=limit,
-            qn_attr=random.choice(OBE_ATTR_LABELS[qn_key]),
+            qn_attr=qn_attr_verbn,
             located=verbalization,
             modifier=random.choice(AGG_OP_LABELS[modifier]),
             attr=random.choice(OBE_ATTR_LABELS[extr_attr_key]),
