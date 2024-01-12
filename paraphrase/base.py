@@ -111,7 +111,7 @@ Paraphrases:
 
 class Paraphraser:
     TRY_LIMIT = 5
-    FUZZY_TOLERANCE = 2
+    FUZZY_TOLERANCE = 5
 
     def __init__(
         self,
@@ -167,27 +167,35 @@ class Paraphraser:
         corrected = True
 
         for l in literals:
+            if l in paraphrase:
+                continue
+
             _l = l
             if _l.startswith("["):
                 _l = _l[1:]
             if _l.endswith("]"):
                 _l = _l[:-1]
             _l = _l.strip()
+            _l.lower()
             w_num = len(_l.split())
 
             words = paraphrase.split()
             candidates = [words[i : i + w_num] for i in range(len(words) - w_num)]
-            dists = np.array(
-                [
-                    Levenshtein.distance(" ".join(c).lower(), _l.lower())
-                    for c in candidates
-                ]
-            )
-            idxes = np.argwhere(dists < self.FUZZY_TOLERANCE)
-            if len(idxes) != 1:
+            dists = []
+            for c in candidates:
+                _c = " ".join(c).lower()
+                d = Levenshtein.distance(_c, _l)
+                dists.append(d)
+            # dists = np.array(
+            #     [
+            #         Levenshtein.distance(" ".join(c).lower(), _l)
+            #         for c in candidates
+            #     ]
+            # )
+            idx = np.argmin(dists)
+            if dists[idx] > self.FUZZY_TOLERANCE:
                 corrected = False
                 break
-            idx = idxes[0][0]
             paraphrase = "{pre} {mid} {post}".format(
                 pre=" ".join(words[:idx]), mid=l, post=" ".join(words[idx + w_num :])
             )
