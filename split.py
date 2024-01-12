@@ -19,9 +19,10 @@ def main():
     for ds in args.datasets:
         with open(ds, "r") as f:
             dataset = json.load(f)
-            
+        
+        filename = ds.rsplit("/", maxsplit=1)[-1]
         for row in dataset:
-            row["id"] = "{filename}_{id}".format(filename=ds, id=row["id"])
+            row["id"] = "{filename}_{id}".format(filename=filename, id=row["id"])
 
         dataset = np.array(dataset)
 
