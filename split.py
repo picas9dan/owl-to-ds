@@ -19,6 +19,10 @@ def main():
     for ds in args.datasets:
         with open(ds, "r") as f:
             dataset = json.load(f)
+            
+        for row in dataset:
+            row["id"] = "{filename}_{id}".format(filename=ds, id=row["id"])
+
         dataset = np.array(dataset)
 
         idxes = np.arange(len(dataset))
