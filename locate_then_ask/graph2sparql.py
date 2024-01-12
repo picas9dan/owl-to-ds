@@ -1,13 +1,13 @@
-from typing import List
 import networkx as nx
-from constants.functions import AggOp, NumOp, StrOp
 
+from constants.functions import AggOp, NumOp, StrOp
 from locate_then_ask.query_graph import QueryGraph
 
 QuerySparl = str
 
 
 class Graph2Sparql:
+    @classmethod
     def _resolve_node_to_sparql(self, query_graph: QueryGraph, n: str):
         if not query_graph.nodes[n].get("template_node"):
             return "?" + n
@@ -19,6 +19,7 @@ class Graph2Sparql:
         else:
             return "<{iri}>".format(iri=query_graph.nodes[n]["iri"])
 
+    @classmethod
     def _make_numerical_operator_pattern(self, query_graph: QueryGraph, s: str, o: str):
         operand_left = "?" + s
         operator = query_graph.nodes[o]["operator"]
@@ -64,6 +65,7 @@ class Graph2Sparql:
         else:
             raise ValueError("Unrecognized numerical operator: " + operator)
 
+    @classmethod
     def _make_string_operator_pattern(self, query_graph: QueryGraph, s: str, o: str):
         operand_left = "?" + s
         operator = query_graph.nodes[o]["operator"]
@@ -76,6 +78,7 @@ class Graph2Sparql:
         else:
             raise ValueError("Unrecognized string operator: " + operator)
 
+    @classmethod
     def make_graph_pattern(self, query_graph: QueryGraph, s: str, o: str):
         assert not QueryGraph.is_blank_node(s)
 
@@ -107,6 +110,7 @@ class Graph2Sparql:
 
         return "{s} {p} {o} .".format(s=s_sparql, p=p_sparql, o=o_sparql)
 
+    @classmethod
     def make_where_clause(self, query_graph: QueryGraph):
         topic_node = next(
             n
@@ -114,20 +118,17 @@ class Graph2Sparql:
             if topic_entity
         )
 
-        graph_patterns = []
-        if query_graph.nodes[topic_node].get("template_node"):
-            graph_patterns.extend(
-                self.make_patterns_for_topic_entity_linking(query_graph, topic_node)
-            )
-
-        for s, o in nx.edge_dfs(query_graph, topic_node):
-            if not QueryGraph.is_blank_node(s):
-                graph_patterns.append(self.make_graph_pattern(query_graph, s, o))
+        graph_patterns = [
+            self.make_graph_pattern(query_graph, s, o)
+            for s, o in nx.edge_dfs(query_graph, topic_node)
+            if not QueryGraph.is_blank_node(s)
+        ]
 
         return "WHERE {{\n  {group_graph_pattern}\n}}".format(
             group_graph_pattern="\n  ".join(graph_patterns)
         )
 
+    @classmethod
     def make_select_clause(self, query_graph: QueryGraph):
         question_nodes = [
             n
@@ -157,11 +158,13 @@ class Graph2Sparql:
 
         return "SELECT " + " ".join([resolve_proj(n) for n in question_nodes])
 
+    @classmethod
     def make_groupby_clause(self, query_graph: QueryGraph):
         if not query_graph.groupby_vars:
             return None
         return "GROUP BY " + " ".join("?" + x for x in query_graph.groupby_vars)
 
+    @classmethod
     def make_order_clause(self, query_graph: QueryGraph):
         if not query_graph.order_conds:
             return None
@@ -172,11 +175,13 @@ class Graph2Sparql:
             for order_cond in query_graph.order_conds
         )
     
+    @classmethod
     def make_limit_clause(self, query_graph: QueryGraph):
         if not query_graph.limit:
             return None
         return "LIMIT " + str(query_graph.limit)
 
+    @classmethod
     def convert(self, query_graph: QueryGraph):
         select_clause = self.make_select_clause(query_graph)
         where_clause = self.make_where_clause(query_graph)

@@ -25,7 +25,7 @@ class OKReactionLocator:
         query_graph.add_topic_node("Reaction", iri=entity_iri)
         query_graph.add_triple("Reaction", "okin:hasEquation", eqn_node)
 
-        verbalization = "the chemical reaction [{entity}]".format(entity=eqn)
+        verbalization = "chemical reaction [{entity}]".format(entity=eqn)
 
         if random.getrandbits(1):
             mechanism_iri = random.choice(entity.mechanism_iris)
@@ -69,8 +69,6 @@ class OKReactionLocator:
             key2freq["participant"] = key2freq["reactant"] + key2freq["product"]
             del key2freq["reactant"]
             del key2freq["product"]
-
-        
 
         popln.append("participant")
         random.shuffle(popln)
@@ -154,10 +152,13 @@ class OKReactionLocator:
                     ]
                 )
 
-                template = "is involved in the mechanism {verb} in [{label}]"
+                template = "{rxn2mechanism} the mechanism {mechanism2doi} in [{label}]"
                 verbalized_conds.append(
                     template.format(
-                        verb=random.choice(
+                        rxn2mechanism=random.choice(
+                            ["is involved in", "is part of", "is featured in", "appears in"]
+                        ),
+                        mechanism2doi=random.choice(
                             ["found", "proposed", "outlined", "indicated", "shown"]
                         ),
                         label=mechanism.doi,
@@ -168,7 +169,7 @@ class OKReactionLocator:
 
         assert verbalized_conds
 
-        verbalization = "the chemical reaction that {conds}".format(
+        verbalization = "chemical reaction that {conds}".format(
             conds=" and ".join(verbalized_conds)
         )
 

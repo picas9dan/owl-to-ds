@@ -8,8 +8,8 @@ from constants.functions import AggOp, NumOp, StrOp
 
 @dataclass
 class OrderCond:
-    desc: int = False
     var: str
+    desc: int = False
 
 class QueryGraph(nx.DiGraph):
     _LITERAL_PREFIX = "Literal_"
@@ -25,10 +25,11 @@ class QueryGraph(nx.DiGraph):
     def is_blank_node(cls, n: str):
         return n.startswith(cls._BN_PREFIX)
 
-    def __init__(self):
+    def __init__(self, incoming_graph_data=None, **attr):
         self.groupby_vars: List[str] = []
         self.order_conds: List[OrderCond] = []
         self.limit: Optional[int] = None
+        super().__init__(incoming_graph_data, **attr)
 
     def get_preds(self, subj: str):
         return [p for u, _, p in self.edges(data="label") if u == subj]

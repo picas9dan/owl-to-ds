@@ -1,20 +1,13 @@
 import random
+from locate_then_ask.ask import ask_name
 
 from locate_then_ask.graph2sparql import Graph2Sparql
 from locate_then_ask.query_graph import QueryGraph
 
 
 class OKSpeciesAsker:
-    def __init__(self):
-        self.graph2sparql = Graph2Sparql()
-
     def ask_name(self, query_graph: QueryGraph, verbalization: str):
-        query_graph.add_question_node("Species")
-
-        query_sparql = self.graph2sparql.convert(query_graph)
-        verbalization = "What is " + verbalization
-
-        return query_sparql, verbalization
+        return ask_name(query_graph, verbalization, "Species")
 
     def ask_count(self, query_graph: QueryGraph, verbalization: str):
         query_graph.add_question_node("Species", count=True)
@@ -22,7 +15,7 @@ class OKSpeciesAsker:
         if verbalization.startswith("the"):
             verbalization = verbalization[len("the") :].strip()
 
-        query_sparql = self.graph2sparql.convert(query_graph)
+        query_sparql = Graph2Sparql.convert(query_graph)
         verbalization = "How many {x} are there".format(x=verbalization)
 
         return query_sparql, verbalization
@@ -48,7 +41,7 @@ class OKSpeciesAsker:
             if "Mechanism" in query_graph.nodes():
                 query_graph.add_triple(k, "okin:definedIn", "Mechanism")
 
-        query_sparql = self.graph2sparql.convert(query_graph)
+        query_sparql = Graph2Sparql.convert(query_graph)
 
         attr_template = random.choice(
             [
