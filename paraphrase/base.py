@@ -7,7 +7,14 @@ from openai import OpenAI
 
 class OpenAiClientForBulletPointResponse:
     PARAPHRASE_NUM = 3
-    SYSTEM_PROMPT_TEMPLATE = "You will be provided with a machine-generated query. Rephrase it in {num} different ways. Additionally, keep the square brackets, tags, and their enclosing text unchanged."
+    SYSTEM_PROMPT_TEMPLATE = '''You will be provided with a machine-generated query. Rephrase it in {num} different ways. Additionally, keep the square brackets, tags, and their enclosing text unchanged.
+    
+Text: """
+{text}
+"""
+
+Paraphrases: 
+'''
 
     def __init__(
         self,
@@ -90,10 +97,9 @@ class OpenAiClientForBulletPointResponse:
                 {
                     "role": "user",
                     "content": self.SYSTEM_PROMPT_TEMPLATE.format(
-                        num=self.PARAPHRASE_NUM
+                        num=self.PARAPHRASE_NUM,
+                        text=input_text
                     )
-                    + "\n\n\n"
-                    + input_text,
                 },
             ],
             **self.kwargs
@@ -159,7 +165,7 @@ class Paraphraser:
 
     def _correct_paraphrase(self, paraphrase: str, literals: Tuple[str, ...]):
         corrected = True
-        
+
         for l in literals:
             _l = l
             if _l.startswith("["):
@@ -170,14 +176,21 @@ class Paraphraser:
             w_num = len(_l.split())
 
             words = paraphrase.split()
-            candidates = [words[i: i + w_num] for i in range(len(words) - w_num)]
-            dists = np.array([Levenshtein.distance(" ".join(c).lower(), _l.lower()) for c in candidates])
+            candidates = [words[i : i + w_num] for i in range(len(words) - w_num)]
+            dists = np.array(
+                [
+                    Levenshtein.distance(" ".join(c).lower(), _l.lower())
+                    for c in candidates
+                ]
+            )
             idxes = np.argwhere(dists < self.FUZZY_TOLERANCE)
             if len(idxes) != 1:
                 corrected = False
                 break
             idx = idxes[0][0]
-            paraphrase = "{pre} {mid} {post}".format(pre=" ".join(words[:idx]), mid=l, post=" ".join(words[idx + w_num:]))
+            paraphrase = "{pre} {mid} {post}".format(
+                pre=" ".join(words[:idx]), mid=l, post=" ".join(words[idx + w_num :])
+            )
 
         if corrected:
             return paraphrase
@@ -197,7 +210,11 @@ class Paraphraser:
                 else:
                     corrected = self._correct_paraphrase(p, literals)
                     if corrected:
-                        print("Successful correction.\nFrom: {i}\nTo:{o}\n".format(i=p, o=corrected))
+                        print(
+                            "Successful correction.\nFrom: {i}\nTo:{o}\n".format(
+                                i=p, o=corrected
+                            )
+                        )
                         paraphrases.append(corrected)
                     else:
                         rejected.append(p)
