@@ -7,10 +7,10 @@ from constants.ontobuiltenv import OBEAttrKey
 
 @dataclass(frozen=True)
 class IctAddress:
-    street: Optional[str]                       # ict:hasStreet
-    street_number: Optional[str]                # ict:hasStreetNumber
-    unit_name: Optional[str]                    # obe:hasUnitName
-    postal_code: Optional[str]                  # obe:hasPostalCode/rdfs:label
+    street: Optional[str] = None                   # ict:hasStreet
+    street_number: Optional[str] = None            # ict:hasStreetNumber
+    unit_name: Optional[str] = None                # obe:hasUnitName
+    postal_code: Optional[str] = None              # obe:hasPostalCode/rdfs:label
 
 @dataclass(frozen=True)
 class OBEPropertyUsage:

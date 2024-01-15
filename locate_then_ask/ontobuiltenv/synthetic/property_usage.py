@@ -1,7 +1,26 @@
+from decimal import Decimal
+import random
 from typing import Tuple
+
+import numpy as np
+from constants.ontobuiltenv import OBE_PROPERTYUSAGE_LABELS
 from locate_then_ask.ontobuiltenv.model import OBEPropertyUsage
 
 
 class OBEPropertyUsageSynthesizer:
+    PROPERTY_USAGE_CONCEPTS = ["obe:" + x for x in OBE_PROPERTYUSAGE_LABELS]
+
     def make(self) -> Tuple[OBEPropertyUsage, ...]:
-        pass
+        n = random.randint(1, 3)
+        uses = random.sample(self.PROPERTY_USAGE_CONCEPTS, k=n)
+        shares = [random.randint(1, 100) for _ in range(n)]
+        shares = np.array(shares) / sum(shares)
+
+        return tuple(
+            OBEPropertyUsage(
+                iri="placeholder",
+                concept=concept,
+                usage_share=Decimal(str(round(share, 2))),
+            )
+            for concept, share in zip(uses, shares)
+        )
