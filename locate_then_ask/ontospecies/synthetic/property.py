@@ -3,9 +3,8 @@ import os
 import random
 from typing import Dict, Tuple
 
-from constants.ontospecies import OSIdentifierKey, OSPropertyKey
-from .model import OSSpecies
 from constants.fs import ROOTDIR
+from constants.ontospecies import OSPropertyKey
 
 
 class OSPropertySynthesizer:
@@ -70,64 +69,3 @@ SELECT DISTINCT (MIN(?Value) AS ?ValueMin) (MAX(?Value) AS ?ValueMax) WHERE {{
             key: self._make(key, low, high)
             for key, (low, high) in self.prop2bounds.items()
         }
-
-
-class OSIdentifierSynthesizer:
-    IDENTIFIERS_FILEPATH = "data/ontospecies/Identifiers.json"
-    IDENTIFIERS_NUM = 3
-
-    def __init__(self):
-        abs_filepath = os.path.join(ROOTDIR, self.IDENTIFIERS_FILEPATH)
-        if not os.path.exists(abs_filepath):
-            from locate_then_ask.kg_client import KgClient
-
-            kg_client = KgClient(
-                "http://178.128.105.213:3838/blazegraph/namespace/ontospecies/sparql"
-            )
-
-            query_template = """PREFIX os: <http://www.theworldavatar.com/ontology/ontospecies/OntoSpecies.owl#>
-
-SELECT DISTINCT ?Value WHERE {{
-    ?x a os:{Ident} ; os:value ?Value .
-}}
-LIMIT 100"""
-
-            identifier2values = dict()
-            for key in OSIdentifierKey:
-                query = query_template.format(Ident=key.value)
-                bindings = kg_client.query(query)["results"]["bindings"]
-                identifier2values[key.value] = [
-                    binding["Value"]["value"] for binding in bindings
-                ]
-
-            os.makedirs(os.path.dirname(abs_filepath), exist_ok=True)
-            with open(abs_filepath, "w") as f:
-                json.dump(identifier2values, f, indent=4)
-        else:
-            with open(abs_filepath, "r") as f:
-                identifier2values = json.load(f)
-
-        self.identifier2values = {
-            OSIdentifierKey(key): value for key, value in identifier2values.items()
-        }
-
-    def make(self):
-        return {
-            key: random.sample(value, min(self.IDENTIFIERS_NUM, len(value)))
-            for key, value in self.identifier2values.items()
-        }
-
-
-class OSSpeciesSynthesizer:
-    def __init__(self):
-        self.prop_synth = OSPropertySynthesizer()
-        self.ident_synth = OSIdentifierSynthesizer()
-
-    def make(self):
-        return OSSpecies(
-            iri="synthetic_entity",
-            key2identifier=self.prop_synth.make(),
-            key2property=self.ident_synth.make(),
-            chemclasses=None,
-            uses=None,
-        )
