@@ -1,4 +1,5 @@
 from locate_then_ask.ontospecies.model import OSSpecies
+from .use import OSUseSynthesizer
 from .chemclass import OSChemClassSynthesizer
 from .property import OSPropertySynthesizer
 from .identifier import OSIdentifierSynthesizer
@@ -9,6 +10,7 @@ class OSSpeciesSynthesizer:
         self.prop_synth = OSPropertySynthesizer()
         self.ident_synth = OSIdentifierSynthesizer()
         self.chemclass_synth = OSChemClassSynthesizer()
+        self.use_synth = OSUseSynthesizer()
 
     def make(self):
         return OSSpecies(
@@ -16,5 +18,5 @@ class OSSpeciesSynthesizer:
             key2identifier=self.prop_synth.make(),
             key2property=self.ident_synth.make(),
             chemclasses=self.chemclass_synth.make(),
-            uses=None,
+            uses=self.use_synth.make(),
         )
