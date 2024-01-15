@@ -10,9 +10,13 @@ class OBEPropertySynthesizer:
     def __init__(self):
         self.addr_synth = IctAddressSynthesizer()
         self.propuse_synth = OBEPropertyUsageSynthesizer()
-        self.area_synth = OmMeasureSynthesizer()
-        self.moneyamount_synth = OmMeasureSynthesizer()
-        self.dist_synth = OmMeasureSynthesizer()
+        self.area_synth = OmMeasureSynthesizer(
+            low=10, high=10000, unit="om:squareMetre"
+        )
+        self.moneyamount_synth = OmMeasureSynthesizer(
+            low=100000, high=10000000, unit="om:poundSterling"
+        )
+        self.dist_synth = OmMeasureSynthesizer(low=2, high=20, unit="om:metre")
 
     def make(self):
         return OBEProperty(
@@ -23,7 +27,7 @@ class OBEPropertySynthesizer:
                 ["obe:Terraced", "obe:Detached", "obe:Semi-Detached"]
             ),
             energy_rating=random.choice("ABCDEFG"),
-            latest_epc=None,
+            latest_epc=random.choice([None, "placeholder"]),
             number_of_habitable_rooms=random.randint(1, 10),
             property_type=random.choice(
                 ["obe:ParkHome", "obe:Maisonette", "obe:House", "obe:Bungalow"]
@@ -31,6 +35,6 @@ class OBEPropertySynthesizer:
             property_usage=self.propuse_synth.make(),
             total_floor_area=self.area_synth.make(),
             market_value=self.moneyamount_synth.make(),
-            latest_transaction_record="placeholder",
+            latest_transaction_record=random.choice([None, "placeholder"]),
             ground_elevation=self.dist_synth.make(),
         )

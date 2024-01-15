@@ -11,7 +11,7 @@ class OBEPropertyUsageSynthesizer:
     PROPERTY_USAGE_CONCEPTS = ["obe:" + x for x in OBE_PROPERTYUSAGE_LABELS]
 
     def make(self) -> Tuple[OBEPropertyUsage, ...]:
-        n = random.randint(1, 3)
+        n = random.randrange(1, 4)
         uses = random.sample(self.PROPERTY_USAGE_CONCEPTS, k=n)
         shares = [random.randint(1, 100) for _ in range(n)]
         shares = np.array(shares) / sum(shares)
