@@ -8,7 +8,7 @@ from constants.ontospecies import OSIdentifierKey
 
 class OSIdentifierSynthesizer:
     IDENTIFIERS_FILEPATH = "data/ontospecies/Identifiers.json"
-    IDENTIFIERS_NUM = 3
+    IDENTIFIER_NUM = 3
 
     def __init__(self):
         abs_filepath = os.path.join(ROOTDIR, self.IDENTIFIERS_FILEPATH)
@@ -24,6 +24,7 @@ class OSIdentifierSynthesizer:
 SELECT DISTINCT ?Value WHERE {{
     ?x a os:{Ident} ; os:value ?Value .
 }}
+ORDER BY RAND()
 LIMIT 100"""
 
             identifier2values = dict()
@@ -47,6 +48,6 @@ LIMIT 100"""
 
     def make(self):
         return {
-            key: random.sample(value, min(self.IDENTIFIERS_NUM, len(value)))
+            key: random.sample(value, min(self.IDENTIFIER_NUM, len(value)))
             for key, value in self.identifier2values.items()
         }
