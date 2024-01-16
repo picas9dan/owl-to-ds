@@ -3,6 +3,9 @@ import random
 import math
 from typing import Optional
 
+import numpy as np
+from numpy.typing import ArrayLike
+
 from constants.functions import NumOp
 
 
@@ -23,11 +26,11 @@ class NumGetter:
             )
 
         if value == 0:
-            lt = Decimal('-1.')
+            lt = Decimal("-1.")
         elif value > 0:
-            lt = value * Decimal('0.9')
+            lt = value * Decimal("0.9")
         else:
-            lt = value * Decimal('1.1')
+            lt = value * Decimal("1.1")
 
         if to_int or random.getrandbits(1):
             lt = math.floor(lt)
@@ -57,11 +60,11 @@ class NumGetter:
             )
 
         if value == 0:
-            gt = Decimal('1.')
+            gt = Decimal("1.")
         elif value > 0:
-            gt = value * Decimal('1.1')
+            gt = value * Decimal("1.1")
         else:
-            gt = value * Decimal('0.9')
+            gt = value * Decimal("0.9")
 
         if to_int or random.getrandbits(1):
             gt = math.ceil(gt)
@@ -71,10 +74,9 @@ class NumGetter:
         if max_val is not None:
             gt = min(gt, max_val)
 
-        assert gt > value, value
+        assert gt > value, "gt: {gt}; value: {value}".format(gt=gt, value=value)
         assert gt * value >= 0, value
         return gt
-
 
 
 def make_operand_and_verbn(
@@ -109,7 +111,9 @@ def make_operand_and_verbn(
         low = NumGetter.lt(value, to_int=to_int, min_val=min_val)
         high = NumGetter.gt(value, to_int=to_int, max_val=max_val)
         operand = (low, high)
-        verbn = random.choice(["in the range between", "between", "inside the interval"])
+        verbn = random.choice(
+            ["in the range between", "between", "inside the interval"]
+        )
     elif operator is NumOp.OUTSIDE_RANGE:
         low = NumGetter.lt(value, to_int=to_int, min_val=min_val)
         high = NumGetter.gt(value, to_int=to_int, max_val=max_val)
@@ -120,7 +124,7 @@ def make_operand_and_verbn(
         verbn = random.choice(["around", "approximately"])
     else:
         raise ValueError("Unexpected operator: " + str(operator))
-    
+
     if isinstance(operand, tuple):
         operand_str = "({values})".format(values=", ".join([str(x) for x in operand]))
     else:
@@ -128,3 +132,7 @@ def make_operand_and_verbn(
     verbn += " " + operand_str
 
     return operand, verbn
+
+
+def normalize_1d(arr: ArrayLike):
+    return np.array(arr) / sum(arr)
