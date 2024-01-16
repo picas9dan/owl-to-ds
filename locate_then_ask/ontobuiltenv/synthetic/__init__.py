@@ -1,4 +1,5 @@
 import random
+from constants.namespaces import DABGEO, OBE, OM
 
 from locate_then_ask.ontobuiltenv.model import OBEProperty
 from .address import IctAddressSynthesizer
@@ -11,26 +12,28 @@ class OBEPropertySynthesizer:
         self.addr_synth = IctAddressSynthesizer()
         self.propuse_synth = OBEPropertyUsageSynthesizer()
         self.area_synth = OmMeasureSynthesizer(
-            low=10, high=10000, unit="om:squareMetre"
+            low=10, high=10000, unit=OM + "squareMetre"
         )
         self.moneyamount_synth = OmMeasureSynthesizer(
-            low=100000, high=10000000, unit="om:poundSterling"
+            low=100000, high=10000000, unit=OM + "poundSterling"
         )
-        self.dist_synth = OmMeasureSynthesizer(low=2, high=20, unit="om:metre")
+        self.dist_synth = OmMeasureSynthesizer(low=2, high=20, unit=OM + "metre")
 
     def make(self):
         return OBEProperty(
             iri="placeholder",
-            concept=random.choice(["obe:Property", "obe:Building", "obe:Flat"]),
+            concept=random.choice(
+                [OBE + "Property", DABGEO + "Building", OBE + "Flat"]
+            ),
             address=self.addr_synth.make(),
             built_form=random.choice(
-                ["obe:Terraced", "obe:Detached", "obe:Semi-Detached"]
+                [OBE + "Terraced", OBE + "Detached", OBE + "Semi-Detached"]
             ),
             energy_rating=random.choice("ABCDEFG"),
             latest_epc=random.choice([None, "placeholder"]),
             number_of_habitable_rooms=random.randint(1, 10),
             property_type=random.choice(
-                ["obe:ParkHome", "obe:Maisonette", "obe:House", "obe:Bungalow"]
+                [OBE + "ParkHome", OBE + "Maisonette", OBE + "House", OBE + "Bungalow"]
             ),
             property_usage=self.propuse_synth.make(),
             total_floor_area=self.area_synth.make(),

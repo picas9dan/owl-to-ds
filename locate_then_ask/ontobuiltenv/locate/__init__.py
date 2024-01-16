@@ -1,10 +1,13 @@
 import random
-from typing import Dict
+from typing import Dict, Optional
+
+import numpy as np
 
 from constants.namespaces import DABGEO, OBE
 from constants.ontobuiltenv import OBEAttrKey
 from locate_then_ask.query_graph import QueryGraph
 from locate_then_ask.ontobuiltenv.entity_store import OBEEntityStore
+from utils.numerical import normalize_1d
 from .attr import OBEAttrLocator
 from .address import OBEAddressLocator
 from .built_form import OBEBuiltFormLocator
@@ -20,8 +23,26 @@ from .latest_transaction_record import OBELatestTransactionRecordLocator
 
 
 class OBELocator:
-    def __init__(self) -> None:
-        self.store = OBEEntityStore()
+    ATTR_KEY_WEIGHTS = {
+        OBEAttrKey.ADDRESS: 4,
+        OBEAttrKey.BUILT_FORM: 3,
+        OBEAttrKey.ENERGY_RATING: 1,
+        OBEAttrKey.LATEST_EPC: 1,
+        OBEAttrKey.NUMBER_OF_HABITABLE_ROOMS: 1,
+        OBEAttrKey.PROPERTY_TYPE: 4,
+        OBEAttrKey.PROPERTY_USAGE: 25,
+        OBEAttrKey.TOTAL_FLOOR_AREA: 1,
+        OBEAttrKey.MARKET_VALUE: 1,
+        OBEAttrKey.LATEST_TRANSACTION_RECORD: 1,
+        OBEAttrKey.GROUND_ELEVATION: 1,
+    }
+
+    def __init__(self, store: Optional[OBEEntityStore]):
+        if store is None:
+            self.store = OBEEntityStore()
+        else:
+            self.store = store
+
         self.attr_locators: Dict[OBEAttrKey, OBEAttrLocator] = {
             OBEAttrKey.ADDRESS: OBEAddressLocator(),
             OBEAttrKey.BUILT_FORM: OBEBuiltFormLocator(),
@@ -57,7 +78,11 @@ class OBELocator:
 
             verbalization = "property"
         else:
-            raise ValueError("Unexpeced type {type} for entity {iri}".format(type=entity.concept, iri=entity_iri))
+            raise ValueError(
+                "Unexpeced type {type} for entity {iri}".format(
+                    type=entity.concept, iri=entity_iri
+                )
+            )
 
         return query_graph, verbalization
 
@@ -67,12 +92,16 @@ class OBELocator:
 
         cond_verbns = []
         keys = entity.get_nonnone_keys()
-        for k in random.sample(keys, k=min(cond_num, len(keys))):
+        weights = [self.ATTR_KEY_WEIGHTS[k] for k in keys]
+        for k in np.random.choice(
+            keys, size=min(cond_num, len(keys)), p=normalize_1d(weights), replace=False
+        ):
             attr_locator = self.attr_locators[k]
             cond_verbn = attr_locator.locate(query_graph, entity=entity)
             cond_verbns.append(cond_verbn)
 
-        verbn = "{concept} whose {conds}".format(concept=concept, conds=" and ".join(cond_verbns))
+        verbn = "{concept} whose {conds}".format(
+            concept=concept, conds=" and ".join(cond_verbns)
+        )
 
         return query_graph, verbn
-        

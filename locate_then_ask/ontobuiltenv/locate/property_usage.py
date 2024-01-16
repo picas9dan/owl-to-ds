@@ -1,3 +1,4 @@
+from decimal import Decimal
 import random
 
 from constants.functions import PRIMITIVE_NUM_OPS, NumOp
@@ -16,8 +17,9 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
         verbns = []
         samples = random.sample(
             entity.property_usage,
-            k=random.choice(range(1, len(entity.property_usage) + 1)),
+            k=random.randint(1, min(len(entity.property_usage), 2)),
         )
+        assert len(samples) == len(set(samples))
         for use in samples:
             usage_node = query_graph.make_blank_node(key=OBEAttrKey.PROPERTY_USAGE)
             assert use.concept.startswith(OBE), use.concept
@@ -34,9 +36,18 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
 
             verbn = random.choice(OBE_PROPERTYUSAGE_LABELS[clsname])
 
-            if use.usage_share is not None:
-                operator = random.choice(PRIMITIVE_NUM_OPS)
+            if use.usage_share is not None and random.getrandbits(1):
+                if use.usage_share == Decimal("1."):
+                    sampling_frame = [
+                        NumOp.GREATER_THAN,
+                        NumOp.GREATER_THAN_EQUAL,
+                        NumOp.EQUAL,
+                    ]
+                else:
+                    sampling_frame = PRIMITIVE_NUM_OPS
+                operator = random.choice(sampling_frame)
                 share_pctg = use.usage_share * 100
+
                 operand, verbn_numop = make_operand_and_verbn(
                     operator,
                     value=share_pctg,
@@ -58,9 +69,7 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
                 query_graph.add_literal_node(usageshare_node)
                 query_graph.add_triple(usage_node, "obe:hasUsageShare", usageshare_node)
                 query_graph.add_func(
-                    target_node=usageshare_node,
-                    operator=operator,
-                    operand=operand
+                    target_node=usageshare_node, operator=operator, operand=operand
                 )
 
                 verbn = verbn + " for " + verbn_numop

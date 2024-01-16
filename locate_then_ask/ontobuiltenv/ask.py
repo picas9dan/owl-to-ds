@@ -16,8 +16,17 @@ class OBEAsker:
     KEY2UNIT = {
         OBEAttrKey.TOTAL_FLOOR_AREA: "om:",
         OBEAttrKey.MARKET_VALUE: "om:poundSterling",
-        OBEAttrKey.GROUND_ELEVATION: "om:"
+        OBEAttrKey.GROUND_ELEVATION: "om:",
     }
+
+    DISCRETE_ATTRS = [
+        # OBEAttrKey.ADDRESS,
+        OBEAttrKey.BUILT_FORM,
+        OBEAttrKey.ENERGY_RATING,
+        OBEAttrKey.NUMBER_OF_HABITABLE_ROOMS,
+        OBEAttrKey.PROPERTY_TYPE,
+        OBEAttrKey.PROPERTY_USAGE,
+    ]
 
     def __init__(self):
         self.graph2sparql = Graph2Sparql()
@@ -95,10 +104,12 @@ class OBEAsker:
         return query_sparql, verbalization
 
     def ask_attrs(self, query_graph: QueryGraph, verbalization: str, attr_num: int = 1):
-        unsampled_attr_keys = self._find_unsampled_keys()
+        unsampled_attr_keys = self._find_unsampled_keys(query_graph)
 
         verbns = []
-        for key in random.sample(unsampled_attr_keys, k=min(attr_num, len(unsampled_attr_keys))):
+        for key in random.sample(
+            unsampled_attr_keys, k=min(attr_num, len(unsampled_attr_keys))
+        ):
             verbn = self._ask_attr(query_graph, key)
             verbns.append(verbn)
 
@@ -133,19 +144,15 @@ class OBEAsker:
                 ]
             )
 
-            agg_num_values = range(1, len(AggOp) + 1)
-            agg_num = random.sample(
-                agg_num_values, counts=reversed(agg_num_values), k=1
-            )[0]
-            for agg in random.sample(tuple(AggOp), k=agg_num):
-                query_graph.add_question_node(value_node, agg=agg)
+            agg = random.choice(tuple(AggOp))
+            query_graph.add_question_node(value_node, agg=agg)
 
-                template = "{modifier} {attr}"
-                verbn = template.format(
-                    modifier=random.choice(random.choice(AGG_OP_LABELS[agg])),
-                    attrs=random.choice(OBE_ATTR_LABELS[key]),
-                )
-                verbns.append(verbn)
+            template = "{modifier} {attr}"
+            verbn = template.format(
+                modifier=random.choice(AGG_OP_LABELS[agg]),
+                attr=random.choice(OBE_ATTR_LABELS[key]),
+            )
+            verbns.append(verbn)
 
         query_sparql = self.graph2sparql.convert(query_graph)
         template = random.choice(
@@ -198,8 +205,13 @@ class OBEAsker:
     def ask_attr_byEntityFreq(
         self, query_graph: QueryGraph, verbalization: str, limit: int = 1
     ):
-        key = random.sample(self._find_unsampled_keys())
-        modifier = random.sample([AggOp.MIN, AggOp.MAX])
+        sampling_frame = [
+            x
+            for x in self.DISCRETE_ATTRS
+            if x in self._find_unsampled_keys(query_graph)
+        ]
+        key = random.choice(sampling_frame)
+        modifier = random.choice([AggOp.MIN, AggOp.MAX])
 
         query_graph.add_triple("Property", "obe:has" + key.value, key.value)
         query_graph.add_question_node(key.value)
@@ -212,16 +224,18 @@ class OBEAsker:
         template = "What are the {limit} {modifier} {attr} among {located}"
         verbalization = template.format(
             limit=limit,
-            modifier=random.choice(EXTREME_FREQ_LABELS[key]),
+            modifier=random.choice(EXTREME_FREQ_LABELS[modifier]),
             attr=random.choice(OBE_ATTR_LABELS[key]),
             located=verbalization,
         )
 
         return query_sparql, verbalization
 
-    def ask_attr_byAnotherAggAttr(self, query_graph: QueryGraph, verbalization: str, limit: int = 1):
+    def ask_attr_byAnotherAggAttr(
+        self, query_graph: QueryGraph, verbalization: str, limit: int = 1
+    ):
         extr_attr_key = random.choice(self._find_unsampled_numerical_keys(query_graph))
-        modifier = random.choice(AggOp)
+        modifier = random.choice(tuple(AggOp))
 
         bn = query_graph.make_blank_node()
         value_node = extr_attr_key.value + "NumericalValue"
@@ -229,20 +243,32 @@ class OBEAsker:
         query_graph.add_iri_node(unit, prefixed=True)
         query_graph.add_triples(
             [
-                ("Property", "obe:has{key}/om:hasValue".format(key=extr_attr_key.value), bn),
+                (
+                    "Property",
+                    "obe:has{key}/om:hasValue".format(key=extr_attr_key.value),
+                    bn,
+                ),
                 (bn, "om:hasNumericalValue", value_node),
                 (bn, "om:hasUnit", unit),
             ]
         )
 
-        qn_key = random.choice([x for x in self._find_unsampled_keys() if x is not extr_attr_key])
+        qn_key = random.choice(
+            [
+                x
+                for x in self._find_unsampled_keys(query_graph)
+                if x is not extr_attr_key
+            ]
+        )
         qn_attr_verbn = self._ask_attr(query_graph, qn_key)
         query_graph.add_groupby(qn_key.value)
         query_graph.add_orderby(value_node, desc=modifier is AggOp.MAX)
         query_graph.set_limit(limit)
 
         query_sparql = self.graph2sparql.convert(query_graph)
-        template = "What are the {limit} {qn_attr} of {located} with the {modifier} {attr}"
+        template = (
+            "What are the {limit} {qn_attr} of {located} with the {modifier} {attr}"
+        )
         verbalization = template.format(
             limit=limit,
             qn_attr=qn_attr_verbn,

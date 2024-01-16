@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 import json
 import os
 import random
@@ -5,12 +6,15 @@ import time
 from typing import List
 
 import networkx as nx
+import numpy as np
 from tqdm import tqdm
 from constants.fs import ROOTDIR
 from constants.ontobuiltenv import OBE_PROPERTYUSAGE_LABELS
+from utils.numerical import normalize_1d
 
-from locate_then_ask.ontobuiltenv.ask import OBEAsker
-from locate_then_ask.ontobuiltenv.locate import OBELocator
+from .ask import OBEAsker
+from .locate import OBELocator
+from .mock_entity_store import MockOBEEntityStore
 from utils.json import EnumEncoder
 
 
@@ -18,11 +22,6 @@ SEED_ENTITIES_FILEPATH = "data/seed_entities/ontobuiltenv.txt"
 
 
 class OBEDatasetGenerator:
-    LOCATE2ASK = {
-        "concept_name": (["name", "count", "agg"], [1, 1, 3]),
-        "concept_and_literal": (["name", "count", "attribute", "agg"], [1, 1, 6, 3]),
-    }
-
     @classmethod
     def query_seed_entities(self):
         from locate_then_ask.kg_client import KgClient
@@ -83,58 +82,89 @@ LIMIT {num}"""
 
         return [x for x in seed_entities if x]
 
-    def __init__(self):
-        self.locator = OBELocator()
+    def __init__(self, synthetic_abox: bool = False):
+        self.locator = OBELocator(MockOBEEntityStore() if synthetic_abox else None)
         self.asker = OBEAsker()
 
-        self.seed_entities = self.retrieve_seed_entities()
+        if synthetic_abox:
+            self.seed_entities = ["placeholder" for _ in range(100)]
+        else:
+            self.seed_entities = self.retrieve_seed_entities()
         random.shuffle(self.seed_entities)
 
-    def generate(self):
+    def generate(self, n_repeats: int = 1):
         examples = []
 
-        for i, entity in enumerate(tqdm(self.seed_entities)):
-            locate_strategy = random.sample(
-                ["concept_name", "concept_and_literal"], counts=[1, 99], k=1
-            )[0]
+        for i, entity in enumerate(tqdm(self.seed_entities * n_repeats)):
+            locate_strategy = np.random.choice(
+                ["concept_name", "concept_and_literal"], p=normalize_1d([1, 99])
+            )
 
             if locate_strategy == "concept_name":
                 query_graph, verbn = self.locator.locate_concept_name(entity)
 
-                ask_strategies = ["name", "count", "agg"]
-                ask_strategy_counts = [1, 1, 3]
-            elif locate_strategy == "concept_and_literal":
-                cond_num = random.sample([1, 2, 3, 4, 5], counts=[1, 2, 3, 2, 1], k=1)[
-                    0
+                ask_strategies = [
+                    "name",
+                    "count",
+                    "agg",
+                    "name_byExtremeAttr",
+                    "attr_byEntityFreq",
+                    "attr_byAnotherAggAttr",
                 ]
+                ask_strategy_counts = [1, 1, 3, 2, 2, 2]
+            elif locate_strategy == "concept_and_literal":
+                cond_num = np.random.choice(
+                    [1, 2, 3], p=normalize_1d([1, 2, 3])
+                )
                 query_graph, verbn = self.locator.locate_concept_and_literal_multi(
                     entity, cond_num=cond_num
                 )
 
+                ask_strategies = ["name", "count", "attribute"]
+                ask_strategy_counts = [1, 1, 6]
+
                 sampled_attr_keys = tuple(
                     key for _, key in query_graph.nodes(data="key") if key is not None
                 )
-                if not all(k in sampled_attr_keys for k in OBEAsker.NUMERICAL_KEYS):
-                    ask_strategies = ["name", "count", "attribute", "agg"]
-                    ask_strategy_counts = [1, 1, 6, 3]
-                else:
-                    ask_strategies = ["name", "count", "attribute"]
-                    ask_strategy_counts = [1, 1, 6]
+                if any(k not in sampled_attr_keys for k in OBEAsker.NUMERICAL_KEYS):
+                    ask_strategies.extend(["agg", "name_byExtremeAttr", "attr_byAnotherAggAttr"])
+                    ask_strategy_counts.extend([3, 2, 2])
+                if any(k not in sampled_attr_keys for k in OBEAsker.DISCRETE_ATTRS):
+                    ask_strategies.append("attr_byEntityFreq")
+                    ask_strategy_counts.append(2)
             else:
                 raise ValueError("Unexpected locate strategy: " + locate_strategy)
 
-            ask_strategy = random.sample(
-                ask_strategies, counts=ask_strategy_counts, k=1
-            )[0]
+            ask_strategy = np.random.choice(
+                ask_strategies, p=normalize_1d(ask_strategy_counts)
+            )
 
             if ask_strategy == "name":
                 query_sparql, verbn = self.asker.ask_name(query_graph, verbn)
             elif ask_strategy == "count":
                 query_sparql, verbn = self.asker.ask_count(query_graph, verbn)
             elif ask_strategy == "attribute":
-                attr_num = random.sample([1, 2, 3], counts=[3, 2, 1], k=1)[0]
+                attr_num = np.random.choice([1, 2, 3], p=normalize_1d([3, 2, 1]))
                 query_sparql, verbn = self.asker.ask_attrs(
                     query_graph, verbn, attr_num=attr_num
+                )
+            elif ask_strategy == "agg":
+                attr_num = np.random.choice([1, 2, 3], p=normalize_1d([3, 2, 1]))
+                query_sparql, verbn = self.asker.ask_agg(query_graph, verbn, attr_num)
+            elif ask_strategy == "name_byExtremeAttr":
+                limit = random.randrange(1, 100)
+                query_sparql, verbn = self.asker.ask_name_byExtremeAttr(
+                    query_graph, verbn, limit
+                )
+            elif ask_strategy == "attr_byEntityFreq":
+                limit = random.randrange(1, 100)
+                query_sparql, verbn = self.asker.ask_attr_byEntityFreq(
+                    query_graph, verbn, limit
+                )
+            elif ask_strategy == "attr_byAnotherAggAttr":
+                limit = random.randrange(1, 100)
+                query_sparql, verbn = self.asker.ask_attr_byAnotherAggAttr(
+                    query_graph, verbn, limit=limit
                 )
             else:
                 raise ValueError("Unexpected ask strategy: " + ask_strategy)
@@ -154,8 +184,14 @@ LIMIT {num}"""
 
 
 if __name__ == "__main__":
-    ds_gen = OBEDatasetGenerator()
-    examples = ds_gen.generate()
+    parser = ArgumentParser()
+    parser.add_argument("--n_repeats", type=int, default=1)
+    parser.add_argument("--synthetic_abox", action="store_true")
+    args = parser.parse_args()
+
+    ds_gen = OBEDatasetGenerator(synthetic_abox=args.synthetic_abox)
+    examples = []
+    examples.extend(ds_gen.generate(args.n_repeats))
 
     time_label = time.strftime("%Y-%m-%d_%H.%M.%S")
     filename = "data/ontobuiltenv_{timestamp}.json".format(timestamp=time_label)

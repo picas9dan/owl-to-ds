@@ -191,10 +191,10 @@ class Graph2Sparql:
 
         sparql = "{SELECT} {WHERE}".format(SELECT=select_clause, WHERE=where_clause)
         if groupby_clause:
-            sparql  += groupby_clause
+            sparql += "\n" + groupby_clause
         if order_clause:
-            sparql += order_clause
+            sparql += "\n" + order_clause
         if limit_clause:
-            sparql += limit_clause
+            sparql += "\n" + limit_clause
 
         return QuerySparl(sparql)
