@@ -34,13 +34,13 @@ def count_schema_items(query_graphs: Iterable[QueryGraph]):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("input", type=str)
-    parser.add_argument("output", type=str)
     args = parser.parse_args()
 
     with open(args.input, "r") as f:
         data = json.load(f, object_hook=as_enum)
 
     stats = count_schema_items(nx.node_link_graph(datum["query"]["graph"]) for datum in data)
-
-    with open(args.output, "w") as f:
+    
+    filename = args.input.rsplit(".", maxsplit=1)[0]
+    with open(filename + "_stats_schema.json", "w") as f:
         json.dump(stats, f, indent=4)

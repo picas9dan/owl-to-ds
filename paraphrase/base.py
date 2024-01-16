@@ -176,22 +176,17 @@ class Paraphraser:
             if _l.endswith("]"):
                 _l = _l[:-1]
             _l = _l.strip()
-            _l.lower()
+            _l = _l.lower()
             w_num = len(_l.split())
 
             words = paraphrase.split()
             candidates = [words[i : i + w_num] for i in range(len(words) - w_num)]
-            dists = []
-            for c in candidates:
-                _c = " ".join(c).lower()
-                d = Levenshtein.distance(_c, _l)
-                dists.append(d)
-            # dists = np.array(
-            #     [
-            #         Levenshtein.distance(" ".join(c).lower(), _l)
-            #         for c in candidates
-            #     ]
-            # )
+            dists = np.array(
+                [
+                    Levenshtein.distance(" ".join(c).lower(), _l)
+                    for c in candidates
+                ]
+            )
             idx = np.argmin(dists)
             if dists[idx] > self.FUZZY_TOLERANCE:
                 corrected = False
