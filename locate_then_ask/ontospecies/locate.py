@@ -1,5 +1,5 @@
 import random
-from typing import Iterable
+from typing import Iterable, Optional
 
 from constants.functions import NumOp, StrOp
 from constants.ontospecies import (
@@ -23,8 +23,11 @@ class OSSpeciesLocator:
         OSIdentifierKey.SMILES,
     ]
 
-    def __init__(self):
-        self.store = OSEntityStore()
+    def __init__(self, store: Optional[OSEntityStore] = None):
+        if store is None:
+            self.store = OSEntityStore()
+        else:
+            self.store = store
 
     def locate_entity_name(self, entity_iris: Iterable[str]):
         entity_names = []

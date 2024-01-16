@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Dict, List, Optional
 
 from constants.ontospecies import OSIdentifierKey, OSPropertyKey
@@ -6,10 +7,10 @@ from constants.ontospecies import OSIdentifierKey, OSPropertyKey
 
 @dataclass(frozen=True)
 class OSProperty:
-    value: float
+    value: Decimal
     unit: str
-    reference_state_value: Optional[float]
-    reference_state_unit: Optional[str]
+    reference_state_value: Optional[float] = None
+    reference_state_unit: Optional[str] = None
 
 
 @dataclass(frozen=True)

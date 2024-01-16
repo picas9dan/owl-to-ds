@@ -1,3 +1,4 @@
+from decimal import Decimal
 import json
 import os
 import random
@@ -5,10 +6,11 @@ from typing import Dict, Tuple
 
 from constants.fs import ROOTDIR
 from constants.ontospecies import OSPropertyKey
+from locate_then_ask.ontospecies.model import OSProperty
 
 
 class OSPropertySynthesizer:
-    PROPERTY_BOUNDS_FILEPATH = "data/ontospecies/PropertyBounds.json"
+    PROPERTY_DATAPOINTS_FILEPATH = "data/ontospecies/PropertyDataPoints.json"
     INT_PROPERTIES = [
         OSPropertyKey.ATOM_CHIRAL_COUNT,
         OSPropertyKey.ATOM_CHIRAL_DEF_COUNT,
@@ -27,7 +29,7 @@ class OSPropertySynthesizer:
     ]
 
     def __init__(self):
-        abs_filepath = os.path.join(ROOTDIR, self.PROPERTY_BOUNDS_FILEPATH)
+        abs_filepath = os.path.join(ROOTDIR, self.PROPERTY_DATAPOINTS_FILEPATH)
         if not os.path.exists(abs_filepath):
             from locate_then_ask.kg_client import KgClient
 
@@ -37,35 +39,36 @@ class OSPropertySynthesizer:
 
             query_template = """PREFIX os: <http://www.theworldavatar.com/ontology/ontospecies/OntoSpecies.owl#>
 
-SELECT DISTINCT (MIN(?Value) AS ?ValueMin) (MAX(?Value) AS ?ValueMax) WHERE {{
+SELECT DISTINCT ?Value WHERE {{
     ?x a os:{Prop} ; os:value ?Value .
-}}"""
-            prop2bounds: Dict[str, Tuple[float, float]] = dict()
+}}
+ORDER BY RAND()
+LIMIT 100"""
+            prop2data: Dict[str, Tuple[float, float]] = dict()
             for prop in OSPropertyKey:
                 query = query_template.format(Prop=prop.value)
-                binding = kg_client.query(query)["results"]["bindings"][0]
-                prop2bounds[prop.value] = (
-                    binding["ValueMin"]["value"],
-                    binding["ValueMax"]["value"],
-                )
+                bindings = kg_client.query(query)["results"]["bindings"]
+                prop2data[prop.value] = [float(x["Value"]["value"]) for x in bindings]
 
             os.makedirs(os.path.dirname(abs_filepath), exist_ok=True)
             with open(abs_filepath, "w") as f:
-                json.dump(prop2bounds, f, indent=4)
+                json.dump(prop2data, f, indent=4)
         else:
             with open(abs_filepath, "r") as f:
-                prop2bounds = json.load(f)
+                prop2data = json.load(f)
 
-        self.prop2bounds = {
-            OSPropertyKey(key): value for key, value in prop2bounds.items()
-        }
+        self.prop2data = {OSPropertyKey(key): value for key, value in prop2data.items()}
 
-    def _make(self, key: OSPropertyKey, low: float, high: float):
-        fn = random.randint if key in self.INT_PROPERTIES else random.randrange
-        return fn(low, high)
+    def _resolve(self, key: OSPropertyKey, value: float):
+        if key in self.INT_PROPERTIES:
+            value = int(value)
+        return Decimal(str(value))
 
     def make(self):
         return {
-            key: self._make(key, low, high)
-            for key, (low, high) in self.prop2bounds.items()
+            key: [
+                OSProperty(self._resolve(key, value), unit="placeholder_unit")
+                for value in random.sample(data, k=min(3, len(data)))
+            ]
+            for key, data in self.prop2data.items()
         }

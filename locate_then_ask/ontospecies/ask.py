@@ -1,4 +1,6 @@
 import random
+
+import numpy as np
 from constants.functions import StrOp
 
 from constants.ontospecies import (
@@ -12,6 +14,7 @@ from constants.ontospecies import (
 )
 from locate_then_ask.graph2sparql import Graph2Sparql
 from locate_then_ask.query_graph import QueryGraph
+from utils.numerical import normalize_1d
 
 
 class OSAsker:
@@ -42,16 +45,17 @@ class OSAsker:
         if is_many_species:
             query_graph.add_question_node("Species")
 
-        will_sample_concrete_attribute = random.sample(
-            population=[True, False],
-            counts=[
-                len(OSPropertyKey)
-                + len(OSIdentifierKey)
-                + len([OSSpeciesAttrKey.CHEMCLASS, OSSpeciesAttrKey.USE]),
-                len(SPECIES_ABSTRACT_ATTRIBUTE_KEYS),
-            ],
-            k=1,
-        )[0]
+        will_sample_concrete_attribute = np.random.choice(
+            [True, False],
+            p=normalize_1d(
+                [
+                    len(OSPropertyKey)
+                    + len(OSIdentifierKey)
+                    + len([OSSpeciesAttrKey.CHEMCLASS, OSSpeciesAttrKey.USE]),
+                    len(SPECIES_ABSTRACT_ATTRIBUTE_KEYS) * 2,
+                ]
+            ),
+        )
 
         if will_sample_concrete_attribute:
             sampled_keys = [
@@ -63,7 +67,16 @@ class OSAsker:
                 + [OSSpeciesAttrKey.CHEMCLASS, OSSpeciesAttrKey.USE]
             )
             sampling_frame = [x for x in sampling_frame if x not in sampled_keys]
-            keys = random.sample(sampling_frame, k=min(attr_num, len(sampling_frame)))
+            weights = [
+                2 if isinstance(k, OSIdentifierKey) else 1 for k in sampling_frame
+            ]
+            keys = np.random.choice(
+                sampling_frame,
+                size=min(attr_num, len(sampling_frame)),
+                replace=False,
+                p=normalize_1d(weights),
+            )
+            # keys = random.sample(sampling_frame, k=min(attr_num, len(sampling_frame)))
             keys_label = []
 
             for key in keys:

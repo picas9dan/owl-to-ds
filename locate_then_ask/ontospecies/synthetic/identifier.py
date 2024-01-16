@@ -23,13 +23,19 @@ class OSIdentifierSynthesizer:
 
 SELECT DISTINCT ?Value WHERE {{
     ?x a os:{Ident} ; os:value ?Value .
+    {filter}
 }}
 ORDER BY RAND()
 LIMIT 100"""
 
             identifier2values = dict()
             for key in OSIdentifierKey:
-                query = query_template.format(Ident=key.value)
+                query = query_template.format(
+                    Ident=key.value,
+                    filter=""
+                    if key is not OSIdentifierKey.INCHI
+                    else "FILTER ( STRLEN(STR(?Value)) < 60 ) FILTER ( STRLEN(STR(?Value)) > 10 )",
+                )
                 bindings = kg_client.query(query)["results"]["bindings"]
                 identifier2values[key.value] = [
                     binding["Value"]["value"] for binding in bindings

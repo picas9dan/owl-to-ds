@@ -25,7 +25,7 @@ SELECT DISTINCT ?Label WHERE {{
     ?x a os:ChemicalClass ; rdfs:label ?Label .
 }}
 ORDER BY RAND()
-LIMIT 100"""
+LIMIT 1000"""
             bindings = kg_client.query(query)["results"]["bindings"]
             chemclasses.update([binding["Label"]["value"] for binding in bindings])
 

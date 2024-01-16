@@ -15,8 +15,8 @@ class OSSpeciesSynthesizer:
     def make(self):
         return OSSpecies(
             iri="synthetic_entity",
-            key2identifier=self.prop_synth.make(),
-            key2property=self.ident_synth.make(),
+            key2identifier=self.ident_synth.make(),
+            key2property=self.prop_synth.make(),
             chemclasses=self.chemclass_synth.make(),
             uses=self.use_synth.make(),
         )
