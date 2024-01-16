@@ -10,6 +10,7 @@ import numpy as np
 from tqdm import tqdm
 from constants.fs import ROOTDIR
 from constants.ontobuiltenv import OBE_PROPERTYUSAGE_LABELS
+from locate_then_ask.query_graph import QueryGraph
 from utils.numerical import normalize_1d
 
 from .ask import OBEAsker
@@ -18,21 +19,24 @@ from .mock_entity_store import MockOBEEntityStore
 from utils.json import EnumEncoder
 
 
-SEED_ENTITIES_FILEPATH = "data/seed_entities/ontobuiltenv.txt"
-
-
 class OBEDatasetGenerator:
+    SEED_ENTITIES_FILEPATH = os.path.join(
+        ROOTDIR, "data/seed_entities/ontobuiltenv.txt"
+    )
+
     @classmethod
-    def query_seed_entities(self):
-        from locate_then_ask.kg_client import KgClient
+    def _retrieve_seed_entities(cls):
+        if not os.path.isfile(cls.SEED_ENTITIES_FILEPATH):
+            print("No seed entities found. Retrieving seed entities...")
+            from locate_then_ask.kg_client import KgClient
 
-        kg_client = KgClient(
-            "http://165.232.172.16:3838/blazegraph/namespace/kingslynn/sparql"
-        )
+            kg_client = KgClient(
+                "http://165.232.172.16:3838/blazegraph/namespace/kingslynn/sparql"
+            )
 
-        iris: List[str] = []
+            iris: List[str] = []
 
-        query_template_by_use = """PREFIX dabgeo: <http://www.purl.org/oema/infrastructure/>
+            query_template_by_use = """PREFIX dabgeo: <http://www.purl.org/oema/infrastructure/>
 PREFIX obe: <https://www.theworldavatar.com/kg/ontobuiltenv/>
 
 SELECT DISTINCT ?x (COUNT(DISTINCT ?p) as ?degree) WHERE {{
@@ -44,12 +48,12 @@ GROUP BY ?x
 ORDER BY DESC(?degree)
 LIMIT {num}"""
 
-        for use in OBE_PROPERTYUSAGE_LABELS.keys():
-            query = query_template_by_use.format(PropertyUsage=use, num=20)
-            bindings = kg_client.query(query)["results"]["bindings"]
-            iris.extend(x["x"]["value"] for x in bindings)
+            for use in OBE_PROPERTYUSAGE_LABELS.keys():
+                query = query_template_by_use.format(PropertyUsage=use, num=20)
+                bindings = kg_client.query(query)["results"]["bindings"]
+                iris.extend(x["x"]["value"] for x in bindings)
 
-        query_template_by_type = """PREFIX obe: <https://www.theworldavatar.com/kg/ontobuiltenv/>
+            query_template_by_type = """PREFIX obe: <https://www.theworldavatar.com/kg/ontobuiltenv/>
 
 SELECT DISTINCT ?x (COUNT(DISTINCT ?p) as ?degree) WHERE {{
     ?x a {type} ;
@@ -59,28 +63,20 @@ GROUP BY ?x
 ORDER BY DESC(?degree)
 LIMIT {num}"""
 
-        for concept, num in (("obe:Flat", 60), ("obe:Property", 40)):
-            query = query_template_by_type.format(type=concept, num=num)
-            bindings = kg_client.query(query)["results"]["bindings"]
-            iris.extend(x["x"]["value"] for x in bindings)
+            for concept, num in (("obe:Flat", 60), ("obe:Property", 40)):
+                query = query_template_by_type.format(type=concept, num=num)
+                bindings = kg_client.query(query)["results"]["bindings"]
+                iris.extend(x["x"]["value"] for x in bindings)
 
-        return tuple(iris)
-
-    @classmethod
-    def retrieve_seed_entities(self):
-        filepath = os.path.join(ROOTDIR, SEED_ENTITIES_FILEPATH)
-
-        if not os.path.isfile(filepath):
-            print("No seed entities found. Retrieving seed entities...")
-            entities = self.query_seed_entities()
-            with open(filepath, "w") as f:
+            entities = tuple(iris)
+            with open(cls.SEED_ENTITIES_FILEPATH, "w") as f:
                 f.write("\n".join(entities))
             print("Retrieval done.")
+        else:
+            with open(cls.SEED_ENTITIES_FILEPATH, "r") as f:
+                entities = [x.strip() for x in f.readlines()]
 
-        with open(filepath, "r") as f:
-            seed_entities = [x.strip() for x in f.readlines()]
-
-        return [x for x in seed_entities if x]
+        return [x for x in entities if x]
 
     def __init__(self, synthetic_abox: bool = False):
         self.locator = OBELocator(MockOBEEntityStore() if synthetic_abox else None)
@@ -89,8 +85,84 @@ LIMIT {num}"""
         if synthetic_abox:
             self.seed_entities = ["placeholder" for _ in range(100)]
         else:
-            self.seed_entities = self.retrieve_seed_entities()
+            self.seed_entities = self._retrieve_seed_entities()
         random.shuffle(self.seed_entities)
+
+    def _locate(self, entity: str, locate_strategy: str):
+        if locate_strategy == "concept_name":
+            query_graph, verbn = self.locator.locate_concept_name(entity)
+        elif locate_strategy == "concept_and_literal":
+            cond_num = np.random.choice([1, 2, 3], p=normalize_1d([1, 2, 3]))
+            query_graph, verbn = self.locator.locate_concept_and_literal_multi(
+                entity, cond_num=cond_num
+            )
+        else:
+            raise ValueError("Unexpected locate strategy: " + locate_strategy)
+
+        return query_graph, verbn
+
+    def _compute_ask_strategies(self, query_graph: QueryGraph, locate_strategy: str):
+        if locate_strategy == "concept_name":
+            ask_strategies = [
+                "name",
+                "count",
+                "agg",
+                "name_byExtremeAttr",
+                "attr_byEntityFreq",
+                "attr_byAnotherAggAttr",
+            ]
+            ask_strategy_counts = [1, 1, 3, 2, 2, 2]
+        elif locate_strategy == "concept_and_literal":
+            ask_strategies = ["name", "count", "attribute"]
+            ask_strategy_counts = [1, 1, 6]
+
+            sampled_attr_keys = tuple(
+                key for _, key in query_graph.nodes(data="key") if key is not None
+            )
+            if any(k not in sampled_attr_keys for k in OBEAsker.NUMERICAL_KEYS):
+                ask_strategies.extend(
+                    ["agg", "name_byExtremeAttr", "attr_byAnotherAggAttr"]
+                )
+                ask_strategy_counts.extend([3, 2, 2])
+            if any(k not in sampled_attr_keys for k in OBEAsker.DISCRETE_ATTRS):
+                ask_strategies.append("attr_byEntityFreq")
+                ask_strategy_counts.append(2)
+        else:
+            raise ValueError("Unexpected locate strategy: " + locate_strategy)
+        return ask_strategies, ask_strategy_counts
+
+    def _ask(self, query_graph: QueryGraph, verbn: str, ask_strategy: str):
+        if ask_strategy == "name":
+            query_sparql, verbn = self.asker.ask_name(query_graph, verbn)
+        elif ask_strategy == "count":
+            query_sparql, verbn = self.asker.ask_count(query_graph, verbn)
+        elif ask_strategy == "attribute":
+            attr_num = np.random.choice([1, 2, 3], p=normalize_1d([3, 2, 1]))
+            query_sparql, verbn = self.asker.ask_attrs(
+                query_graph, verbn, attr_num=attr_num
+            )
+        elif ask_strategy == "agg":
+            attr_num = np.random.choice([1, 2, 3], p=normalize_1d([3, 2, 1]))
+            query_sparql, verbn = self.asker.ask_agg(query_graph, verbn, attr_num)
+        elif ask_strategy == "name_byExtremeAttr":
+            limit = random.randrange(1, 100)
+            query_sparql, verbn = self.asker.ask_name_byExtremeAttr(
+                query_graph, verbn, limit
+            )
+        elif ask_strategy == "attr_byEntityFreq":
+            limit = random.randrange(1, 100)
+            query_sparql, verbn = self.asker.ask_attr_byEntityFreq(
+                query_graph, verbn, limit
+            )
+        elif ask_strategy == "attr_byAnotherAggAttr":
+            limit = random.randrange(1, 100)
+            query_sparql, verbn = self.asker.ask_attr_byAnotherAggAttr(
+                query_graph, verbn, limit=limit
+            )
+        else:
+            raise ValueError("Unexpected ask strategy: " + ask_strategy)
+
+        return query_sparql, verbn
 
     def generate(self, n_repeats: int = 1):
         examples = []
@@ -100,74 +172,15 @@ LIMIT {num}"""
                 ["concept_name", "concept_and_literal"], p=normalize_1d([1, 99])
             )
 
-            if locate_strategy == "concept_name":
-                query_graph, verbn = self.locator.locate_concept_name(entity)
-
-                ask_strategies = [
-                    "name",
-                    "count",
-                    "agg",
-                    "name_byExtremeAttr",
-                    "attr_byEntityFreq",
-                    "attr_byAnotherAggAttr",
-                ]
-                ask_strategy_counts = [1, 1, 3, 2, 2, 2]
-            elif locate_strategy == "concept_and_literal":
-                cond_num = np.random.choice(
-                    [1, 2, 3], p=normalize_1d([1, 2, 3])
-                )
-                query_graph, verbn = self.locator.locate_concept_and_literal_multi(
-                    entity, cond_num=cond_num
-                )
-
-                ask_strategies = ["name", "count", "attribute"]
-                ask_strategy_counts = [1, 1, 6]
-
-                sampled_attr_keys = tuple(
-                    key for _, key in query_graph.nodes(data="key") if key is not None
-                )
-                if any(k not in sampled_attr_keys for k in OBEAsker.NUMERICAL_KEYS):
-                    ask_strategies.extend(["agg", "name_byExtremeAttr", "attr_byAnotherAggAttr"])
-                    ask_strategy_counts.extend([3, 2, 2])
-                if any(k not in sampled_attr_keys for k in OBEAsker.DISCRETE_ATTRS):
-                    ask_strategies.append("attr_byEntityFreq")
-                    ask_strategy_counts.append(2)
-            else:
-                raise ValueError("Unexpected locate strategy: " + locate_strategy)
+            query_graph, verbn = self._locate(entity, locate_strategy)
+            ask_strategies, ask_strategy_counts = self._compute_ask_strategies(
+                query_graph, locate_strategy
+            )
 
             ask_strategy = np.random.choice(
                 ask_strategies, p=normalize_1d(ask_strategy_counts)
             )
-
-            if ask_strategy == "name":
-                query_sparql, verbn = self.asker.ask_name(query_graph, verbn)
-            elif ask_strategy == "count":
-                query_sparql, verbn = self.asker.ask_count(query_graph, verbn)
-            elif ask_strategy == "attribute":
-                attr_num = np.random.choice([1, 2, 3], p=normalize_1d([3, 2, 1]))
-                query_sparql, verbn = self.asker.ask_attrs(
-                    query_graph, verbn, attr_num=attr_num
-                )
-            elif ask_strategy == "agg":
-                attr_num = np.random.choice([1, 2, 3], p=normalize_1d([3, 2, 1]))
-                query_sparql, verbn = self.asker.ask_agg(query_graph, verbn, attr_num)
-            elif ask_strategy == "name_byExtremeAttr":
-                limit = random.randrange(1, 100)
-                query_sparql, verbn = self.asker.ask_name_byExtremeAttr(
-                    query_graph, verbn, limit
-                )
-            elif ask_strategy == "attr_byEntityFreq":
-                limit = random.randrange(1, 100)
-                query_sparql, verbn = self.asker.ask_attr_byEntityFreq(
-                    query_graph, verbn, limit
-                )
-            elif ask_strategy == "attr_byAnotherAggAttr":
-                limit = random.randrange(1, 100)
-                query_sparql, verbn = self.asker.ask_attr_byAnotherAggAttr(
-                    query_graph, verbn, limit=limit
-                )
-            else:
-                raise ValueError("Unexpected ask strategy: " + ask_strategy)
+            query_sparql, verbn = self._ask(query_graph, verbn, ask_strategy)
 
             example = dict(
                 id=i,
