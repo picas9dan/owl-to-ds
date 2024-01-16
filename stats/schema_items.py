@@ -15,16 +15,15 @@ def count_schema_items(query_graphs: Iterable[QueryGraph]):
 
     for query_graph in query_graphs:
         for s, o, p in query_graph.edges(data="label"):
-            if p in ["a", 'a/rdfs:subClassOf', "a/rdfs:subClassOf*"] or p.endswith("/a"):
+            props = p.split("/")
+            if props[-1] in ["a", "rdfs:subClassOf", "rdfs:subClassOf*"]:
                 cls2freq[o] += 1
-            elif p in ["rdfs:subClassOf", "rdfs:subClassOf*"]:
+            if props[0] in ["rdfs:subClassOf", "rdfs:subClassOf*"]:
                 cls2freq[s] += 1
-                cls2freq[o] += 1
-            else:
-                for _p in p.split("/"):
-                    if _p.startswith("^"):
-                        _p = _p[1:]
-                    prop2freq[_p] += 1
+            for prop in props:
+                if prop.startswith("^"):
+                    prop = prop[1:]
+                prop2freq[prop] += 1
 
     return {
         "property": prop2freq,
