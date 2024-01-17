@@ -57,6 +57,8 @@ class OBEProperty:
             keys.append(OBEAttrKey.BUILT_FORM)
         if self.energy_rating is not None:
             keys.append(OBEAttrKey.ENERGY_RATING)
+        if self.latest_epc is not None:
+            keys.append(OBEAttrKey.LATEST_EPC)
         if self.number_of_habitable_rooms is not None:
             keys.append(OBEAttrKey.NUMBER_OF_HABITABLE_ROOMS)
         if self.property_type is not None:
@@ -67,6 +69,8 @@ class OBEProperty:
             keys.append(OBEAttrKey.TOTAL_FLOOR_AREA)
         if self.market_value is not None:
             keys.append(OBEAttrKey.MARKET_VALUE)
+        if self.latest_transaction_record is not None:
+            keys.append(OBEAttrKey.LATEST_TRANSACTION_RECORD)
         if self.ground_elevation is not None:
             keys.append(OBEAttrKey.GROUND_ELEVATION)
 

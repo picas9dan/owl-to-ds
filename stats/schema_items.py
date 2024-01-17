@@ -20,7 +20,16 @@ def count_schema_items(query_graphs: Iterable[QueryGraph]):
                 cls2freq[o] += 1
             if props[0] in ["rdfs:subClassOf", "rdfs:subClassOf*"]:
                 cls2freq[s] += 1
+            
+            stack = []
             for prop in props:
+                if prop.startswith("(") and prop.endswith(")") and '|' in prop:
+                    stack.extend(prop[1:-1].split("|"))
+                else:
+                    stack.append(prop)
+
+            while stack:
+                prop = stack.pop()
                 if prop.startswith("^"):
                     prop = prop[1:]
                 prop2freq[prop] += 1

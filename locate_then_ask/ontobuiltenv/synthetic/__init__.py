@@ -11,13 +11,9 @@ class OBEPropertySynthesizer:
     def __init__(self):
         self.addr_synth = IctAddressSynthesizer()
         self.propuse_synth = OBEPropertyUsageSynthesizer()
-        self.area_synth = OmMeasureSynthesizer(
-            low=10, high=10000, unit=OM + "squareMetre"
-        )
-        self.moneyamount_synth = OmMeasureSynthesizer(
-            low=100000, high=10000000, unit=OM + "poundSterling"
-        )
-        self.dist_synth = OmMeasureSynthesizer(low=2, high=20, unit=OM + "metre")
+        self.totalfloorarea_synth = OmMeasureSynthesizer("TotalFloorArea")
+        self.marketvalue_synth = OmMeasureSynthesizer("MarketValue")
+        self.groundelevation_synth = OmMeasureSynthesizer("GroundElevation")
 
     def make(self):
         return OBEProperty(
@@ -31,13 +27,13 @@ class OBEPropertySynthesizer:
             ),
             energy_rating=random.choice("ABCDEFG"),
             latest_epc=random.choice([None, "placeholder"]),
-            number_of_habitable_rooms=random.randint(1, 10),
+            number_of_habitable_rooms=random.randint(1, 69),
             property_type=random.choice(
                 [OBE + "ParkHome", OBE + "Maisonette", OBE + "House", OBE + "Bungalow"]
             ),
             property_usage=self.propuse_synth.make(),
-            total_floor_area=self.area_synth.make(),
-            market_value=self.moneyamount_synth.make(),
+            total_floor_area=self.totalfloorarea_synth.make(),
+            market_value=self.marketvalue_synth.make(),
             latest_transaction_record=random.choice([None, "placeholder"]),
-            ground_elevation=self.dist_synth.make(),
+            ground_elevation=self.groundelevation_synth.make(),
         )
