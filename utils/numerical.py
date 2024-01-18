@@ -1,7 +1,7 @@
 from decimal import Decimal
 import random
 import math
-from typing import Optional
+from typing import Optional, Tuple
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -33,7 +33,7 @@ class NumGetter:
             lt = value * Decimal("1.1")
 
         if to_int or random.getrandbits(1):
-            lt = math.floor(lt)
+            lt = Decimal(str(math.floor(lt)))
             if lt == value:
                 lt = value - 1
 
@@ -67,7 +67,7 @@ class NumGetter:
             gt = value * Decimal("0.9")
 
         if to_int or random.getrandbits(1):
-            gt = math.ceil(gt)
+            gt = Decimal(str(math.ceil(gt)))
             if gt == value:
                 gt = value + 1
 
@@ -85,27 +85,27 @@ def make_operand_and_verbn(
     to_int: bool = False,
     max_val: Optional[Decimal] = None,
     min_val: Optional[Decimal] = None,
-):
+) -> Tuple[Tuple[Decimal, ...], str]:
     if operator is NumOp.LESS_THAN:
-        operand = NumGetter.gt(value, to_int=to_int, max_val=max_val)
+        operand = (NumGetter.gt(value, to_int=to_int, max_val=max_val),)
         verbn = random.choice(["<", "less than", "lower than", "smaller than"])
     elif operator is NumOp.LESS_THAN_EQUAL:
         if random.getrandbits(1):
-            operand = NumGetter.gt(value, to_int=to_int, max_val=max_val)
+            operand = (NumGetter.gt(value, to_int=to_int, max_val=max_val),)
         else:
-            operand = value
+            operand = (value,)
         verbn = random.choice(["<=", "less than or equal to", "not greater than"])
     elif operator is NumOp.GREATER_THAN:
-        operand = NumGetter.lt(value, to_int=to_int, min_val=min_val)
+        operand = (NumGetter.lt(value, to_int=to_int, min_val=min_val),)
         verbn = random.choice([">", "greater than", "higher than", "bigger than"])
     elif operator is NumOp.GREATER_THAN_EQUAL:
         if random.getrandbits(1):
-            operand = NumGetter.lt(value, to_int=to_int, min_val=min_val)
+            operand = (NumGetter.lt(value, to_int=to_int, min_val=min_val),)
         else:
-            operand = value
+            operand = (value,)
         verbn = random.choice([">=", "greater than or equal to", "not less than"])
     elif operator is NumOp.EQUAL:
-        operand = value
+        operand = (value,)
         verbn = random.choice(["=", "equal to"])
     elif operator is NumOp.INSIDE_RANGE:
         low = NumGetter.lt(value, to_int=to_int, min_val=min_val)
@@ -120,15 +120,15 @@ def make_operand_and_verbn(
         operand = (low, high)
         verbn = random.choice(["outside the interval", "not between"])
     elif operator is NumOp.AROUND:
-        operand = value
+        operand = (value,)
         verbn = random.choice(["around", "approximately"])
     else:
         raise ValueError("Unexpected operator: " + str(operator))
 
-    if isinstance(operand, tuple):
+    if len(operand) > 1:
         operand_str = "({values})".format(values=", ".join([str(x) for x in operand]))
     else:
-        operand_str = str(operand)
+        operand_str = str(operand[0])
     verbn += " " + operand_str
 
     return operand, verbn

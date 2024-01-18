@@ -12,12 +12,13 @@ class NumOp(Enum):
     OUTSIDE_RANGE = "outside"
 
 
-PRIMITIVE_NUM_OPS = [
+OBE_NUM_OPS = [
     NumOp.LESS_THAN,
     NumOp.GREATER_THAN,
     NumOp.LESS_THAN_EQUAL,
     NumOp.GREATER_THAN_EQUAL,
     NumOp.EQUAL,
+    NumOp.INSIDE_RANGE,
 ]
 
 
@@ -29,6 +30,9 @@ class AggOp(Enum):
     MIN = "min"
     MAX = "max"
     AVG = "avg"
+
+
+EXTREMUM_OPS = [AggOp.MIN, AggOp.MAX]
 
 
 AGG_OP_LABELS = {

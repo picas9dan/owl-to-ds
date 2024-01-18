@@ -1,5 +1,6 @@
 import random
-from constants.functions import AGG_OP_LABELS, EXTREME_FREQ_LABELS, AggOp
+from constants.functions import AGG_OP_LABELS, EXTREME_FREQ_LABELS, EXTREMUM_OPS, AggOp
+from constants.om import OM_KEY_LABELS
 
 from constants.ontobuiltenv import OBE_ATTR_LABELS, OBEAttrKey
 from locate_then_ask.graph2sparql import Graph2Sparql
@@ -14,9 +15,9 @@ class OBEAsker:
     ]
 
     KEY2UNIT = {
-        OBEAttrKey.TOTAL_FLOOR_AREA: "om:",
+        OBEAttrKey.TOTAL_FLOOR_AREA: "om:squareMetre",
         OBEAttrKey.MARKET_VALUE: "om:poundSterling",
-        OBEAttrKey.GROUND_ELEVATION: "om:",
+        OBEAttrKey.GROUND_ELEVATION: "om:metre",
     }
 
     DISCRETE_ATTRS = [
@@ -52,17 +53,14 @@ class OBEAsker:
         return [k for k in self.NUMERICAL_KEYS if k not in sampled_attr_keys]
 
     def _ask_attr(self, query_graph: QueryGraph, key: OBEAttrKey):
-        if key is OBEAttrKey.ADDRESS:
-            q = random.choice(["address", "postalcode", "street"])
-            if q == "address":
-                query_graph.add_question_node("Address")
-                query_graph.add_triple("Property", "obe:hasAddress", "Address")
-
-                return random.choice(OBE_ATTR_LABELS[key])
-            elif q == "postalcode":
-                query_graph.add_question_node("PostalCode")
+        if key is OBEAttrKey.ADDRESS and random.random() < 1 / 3:
+            q = random.choice(["postalcode", "street"])
+            if q == "postalcode":
+                query_graph.add_question_node("PostalCodeLabel")
                 query_graph.add_triple(
-                    "Property", "obe:hasAddress/obe:hasPostalCode", "PostalCode"
+                    "Property",
+                    "obe:hasAddress/obe:hasPostalCode/rdfs:label",
+                    "PostalCodeLabel",
                 )
 
                 return "postal code"
@@ -152,6 +150,10 @@ class OBEAsker:
                 modifier=random.choice(AGG_OP_LABELS[agg]),
                 attr=random.choice(OBE_ATTR_LABELS[key]),
             )
+            if random.getrandbits(1):
+                verbn += " in {unit}".format(
+                    unit=random.choice(OM_KEY_LABELS[unit[len("om:") :]])
+                )
             verbns.append(verbn)
 
         query_sparql = self.graph2sparql.convert(query_graph)
@@ -172,7 +174,7 @@ class OBEAsker:
         self, query_graph: QueryGraph, verbalization: str, limit: int = 1
     ):
         key = random.choice(self._find_unsampled_numerical_keys(query_graph))
-        modifier = random.choice([AggOp.MIN, AggOp.MAX])
+        modifier = random.choice(EXTREMUM_OPS)
 
         bn = query_graph.make_blank_node()
         value_node = key.value + "NumericalValue"
@@ -192,7 +194,7 @@ class OBEAsker:
         query_graph.set_limit(limit)
 
         query_sparql = self.graph2sparql.convert(query_graph)
-        template = "What are the {limit} {located} with the {modifier} {attr}"
+        template = "What are the {limit} {located} and with the {modifier} {attr}"
         verbalization = template.format(
             limit=limit,
             located=verbalization,
@@ -231,11 +233,11 @@ class OBEAsker:
 
         return query_sparql, verbalization
 
-    def ask_attr_byAnotherAggAttr(
+    def ask_attr_byExtremeAttr(
         self, query_graph: QueryGraph, verbalization: str, limit: int = 1
     ):
         extr_attr_key = random.choice(self._find_unsampled_numerical_keys(query_graph))
-        modifier = random.choice(tuple(AggOp))
+        modifier = random.choice(EXTREMUM_OPS)
 
         bn = query_graph.make_blank_node()
         value_node = extr_attr_key.value + "NumericalValue"
@@ -261,13 +263,19 @@ class OBEAsker:
             ]
         )
         qn_attr_verbn = self._ask_attr(query_graph, qn_key)
-        query_graph.add_groupby(qn_key.value)
+        query_graph.add_groupby(
+            next(
+                n
+                for n, question_node in query_graph.nodes(data="question_node")
+                if question_node
+            )
+        )
         query_graph.add_orderby(value_node, desc=modifier is AggOp.MAX)
         query_graph.set_limit(limit)
 
         query_sparql = self.graph2sparql.convert(query_graph)
         template = (
-            "What are the {limit} {qn_attr} of {located} with the {modifier} {attr}"
+            "What are the {qn_attr} of {limit} {located} and with the {modifier} {attr}"
         )
         verbalization = template.format(
             limit=limit,

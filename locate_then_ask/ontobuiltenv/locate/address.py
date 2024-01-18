@@ -7,6 +7,13 @@ from locate_then_ask.query_graph import QueryGraph
 
 
 class OBEAddressLocator(OBEAttrLocator):
+    KEY2PROP = {
+        "unit_name": "obe:hasUnitName",
+        "street_number": "ict:hasStreetNumber",
+        "street": "ict:hasStreet",
+        "postal_code": "obe:hasPostalCode/rdfs:label",
+    }
+
     def locate(self, query_graph: QueryGraph, entity: OBEProperty):
         """Locates the topic entity in the query_graph by its address.
         The query_graph is modified in-place."""
@@ -15,38 +22,49 @@ class OBEAddressLocator(OBEAttrLocator):
         address_node = query_graph.make_blank_node(key=OBEAttrKey.ADDRESS)
         query_graph.add_triple("Property", "obe:hasAddress", address_node)
 
-        sampling_frame = []
-        if entity.address.postal_code is not None:
-            sampling_frame.append("postal_code")
-        if entity.address.street is not None:
-            # assert entity.address.street_number is not None
-            sampling_frame.append("street_addr")
-        assert len(sampling_frame) > 0
+        candidates = entity.address.get_nonnone_keys()
+        assert len(candidates) > 0
 
-        sampled = random.choice(sampling_frame)
-        if sampled == "postal_code":
-            assert entity.address.postal_code is not None
+        if (
+            "postal_code" in candidates
+            and len(candidates) > 1
+            and random.random() < 1 / 3
+        ):
+            if random.getrandbits(1):
+                # locate by postal code
+                postalcode_node = query_graph.make_literal_node(
+                    entity.address.postal_code
+                )
+                query_graph.add_triple(
+                    address_node, "obe:hasPostalCode/rdfs:label", postalcode_node
+                )
 
-            postalcode_node = query_graph.make_literal_node(entity.address.postal_code)
-            query_graph.add_triple(address_node, "obe:hasPostalCode/rdfs:label", postalcode_node)
-
-            verbn = "the postal code [{code}]".format(code=entity.address.postal_code)
-        elif sampled == "street_addr":
-            assert entity.address.street is not None
-            # assert entity.address.street_number is not None
-
-            street_node = query_graph.make_literal_node(entity.address.street)
-            query_graph.add_triple(address_node, "ict:hasStreet", street_node)
-
-            if entity.address.street_number is not None:
-                streetnum_node = query_graph.make_literal_node(entity.address.street_number)
-                query_graph.add_triple(address_node, "ict:hasStreetNumber", streetnum_node)
-                
-                verbn = "[{number} {street}]".format(
-                    number=entity.address.street_number, street=entity.address.street
+                verbn = "the postal code [{code}]".format(
+                    code=entity.address.postal_code
                 )
             else:
-                verbn = "[{street}]".format(street=entity.address.street)
+                # locate by everything
+                for key in candidates:
+                    node = query_graph.make_literal_node(getattr(entity.address, key))
+                    query_graph.add_triple(address_node, self.KEY2PROP[key], node)
+                verbn = "[{addr}]".format(
+                    addr=" ".join(getattr(entity.address, key) for key in candidates)
+                )
+        else:
+            # locate by everything but postal code
+            for key in candidates:
+                if key == "postal_code":
+                    continue
+                node = query_graph.make_literal_node(getattr(entity.address, key))
+                query_graph.add_triple(address_node, self.KEY2PROP[key], node)
+
+            verbn = "[{addr}]".format(
+                addr=" ".join(
+                    getattr(entity.address, key)
+                    for key in candidates
+                    if key != "postal_code"
+                )
+            )
 
         verbn = "addresss is at " + verbn
 

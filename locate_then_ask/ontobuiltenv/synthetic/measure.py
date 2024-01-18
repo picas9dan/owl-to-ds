@@ -42,5 +42,5 @@ LIMIT 100"""
     def make(self):
         sample = self.df.sample(1).iloc[0]
         return OmMeasure(
-            numerical_value=Decimal(sample["NumericalValue"]), unit_iri=sample["Unit"]
+            numerical_value=Decimal(str(sample["NumericalValue"])), unit_iri=sample["Unit"]
         )

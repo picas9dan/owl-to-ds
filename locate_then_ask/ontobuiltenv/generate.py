@@ -156,7 +156,7 @@ LIMIT {num}"""
             )
         elif ask_strategy == "attr_byAnotherAggAttr":
             limit = random.randrange(1, 100)
-            query_sparql, verbn = self.asker.ask_attr_byAnotherAggAttr(
+            query_sparql, verbn = self.asker.ask_attr_byExtremeAttr(
                 query_graph, verbn, limit=limit
             )
         else:

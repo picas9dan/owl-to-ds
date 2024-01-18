@@ -1,3 +1,5 @@
+from decimal import Decimal
+from typing import Tuple
 import networkx as nx
 
 from constants.functions import AggOp, NumOp, StrOp
@@ -23,7 +25,7 @@ class Graph2Sparql:
     def _make_numerical_operator_pattern(self, query_graph: QueryGraph, s: str, o: str):
         operand_left = "?" + s
         operator = query_graph.nodes[o]["operator"]
-        operand_right = query_graph.nodes[o]["operand"]
+        operand_right: Tuple[Decimal, ...] = query_graph.nodes[o]["operand"]
 
         if operator in [
             NumOp.LESS_THAN,
@@ -32,11 +34,11 @@ class Graph2Sparql:
             NumOp.GREATER_THAN_EQUAL,
             NumOp.EQUAL,
         ]:
+            assert len(operand_right) == 1
             return "FILTER ( {left} {op} {right} )".format(
-                left=operand_left, op=operator.value, right=operand_right
+                left=operand_left, op=operator.value, right=operand_right[0]
             )
         elif operator is NumOp.INSIDE_RANGE:
-            assert isinstance(operand_right, tuple)
             assert len(operand_right) == 2
             low, high = operand_right
             return "FILTER ( {left} > {low} && {left} < {high} )".format(
@@ -174,7 +176,7 @@ class Graph2Sparql:
             else "?" + order_cond.var
             for order_cond in query_graph.order_conds
         )
-    
+
     @classmethod
     def make_limit_clause(self, query_graph: QueryGraph):
         if not query_graph.limit:

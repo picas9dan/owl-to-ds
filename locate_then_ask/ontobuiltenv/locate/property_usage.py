@@ -1,7 +1,7 @@
 from decimal import Decimal
 import random
 
-from constants.functions import PRIMITIVE_NUM_OPS, NumOp
+from constants.functions import OBE_NUM_OPS, NumOp
 from constants.namespaces import OBE
 from constants.ontobuiltenv import OBE_PROPERTYUSAGE_LABELS, OBEAttrKey
 from locate_then_ask.ontobuiltenv.locate.attr import OBEAttrLocator
@@ -20,7 +20,15 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
             k=random.randint(1, min(len(entity.property_usage), 2)),
         )
         assert len(samples) == len(set(samples))
-        for use in samples:
+        samples.sort(
+            key=lambda use: use.usage_share is None
+        )  # those with usage_share comes first
+        use_share_num = sum(use.usage_share is not None for use in samples)
+        do_locate_share_num = random.randint(0, use_share_num)
+        do_locate_shares = (
+            i < do_locate_share_num for i in range(len(samples))
+        )
+        for use, do_locate_share in zip(samples, do_locate_shares):
             usage_node = query_graph.make_blank_node(key=OBEAttrKey.PROPERTY_USAGE)
             assert use.concept.startswith(OBE), use.concept
             clsname = use.concept[len(OBE) :]
@@ -36,7 +44,7 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
 
             verbn = random.choice(OBE_PROPERTYUSAGE_LABELS[clsname])
 
-            if use.usage_share is not None and random.getrandbits(1):
+            if do_locate_share:
                 if use.usage_share == Decimal("1."):
                     sampling_frame = [
                         NumOp.GREATER_THAN,
@@ -44,7 +52,7 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
                         NumOp.EQUAL,
                     ]
                 else:
-                    sampling_frame = PRIMITIVE_NUM_OPS
+                    sampling_frame = OBE_NUM_OPS
                 operator = random.choice(sampling_frame)
                 share_pctg = use.usage_share * 100
 
@@ -56,14 +64,12 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
                 )
 
                 if operator == NumOp.EQUAL:
-                    verbn_numop = str(operand)
+                    verbn_numop = str(operand[0])
 
-                share_pctg_str = str(operand)
-                if share_pctg_str.endswith("00"):
-                    share_pctg_str = share_pctg_str[:-2]
-                share_pctg_str += "%"
-                verbn_numop = verbn_numop.replace(str(operand), share_pctg_str)
-                operand = operand / 100
+                for num in operand:
+                    share_pctg_str = str(num) + "%"
+                    verbn_numop = verbn_numop.replace(str(num), share_pctg_str)
+                operand = tuple(x / 100 for x in operand)
 
                 usageshare_node = clsname + "UsageShare"
                 query_graph.add_literal_node(usageshare_node)
@@ -76,6 +82,6 @@ class OBEPropertyUsageLocator(OBEAttrLocator):
 
             verbns.append(verbn)
 
-        verbalization = "usage is " + ", ".join(verbns)
+        verbalization = "usage is " + " and ".join(verbns)
 
         return verbalization

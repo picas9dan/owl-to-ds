@@ -7,42 +7,54 @@ from constants.ontobuiltenv import OBEAttrKey
 
 @dataclass(frozen=True)
 class IctAddress:
-    street: Optional[str] = None                   # ict:hasStreet
-    street_number: Optional[str] = None            # ict:hasStreetNumber
-    unit_name: Optional[str] = None                # obe:hasUnitName
-    postal_code: Optional[str] = None              # obe:hasPostalCode/rdfs:label
+    street: Optional[str] = None  # ict:hasStreet
+    street_number: Optional[str] = None  # ict:hasStreetNumber
+    unit_name: Optional[str] = None  # obe:hasUnitName
+    postal_code: Optional[str] = None  # obe:hasPostalCode/rdfs:label
+
+    def get_nonnone_keys(self):
+        return tuple(
+            key
+            for key in ["unit_name", "street_number", "street", "postal_code"]
+            if getattr(self, key) is not None
+        )
+
 
 @dataclass(frozen=True)
 class OBEPropertyUsage:
     iri: str
-    concept: str                                # a
-    usage_share: Optional[Decimal]                # obe:hasUsageShare
+    concept: str  # a
+    usage_share: Optional[Decimal]  # obe:hasUsageShare
+
 
 @dataclass(frozen=True)
 class OmMeasure:
-    numerical_value: Decimal                     # om:hasNumericalValue
-    unit_iri: str                               # om:hasUnit
+    numerical_value: Decimal  # om:hasNumericalValue
+    unit_iri: str  # om:hasUnit
+
 
 @dataclass(frozen=True)
 class OBEProperty:
     iri: str
-    concept: str                                # a
-    address: Optional[IctAddress]               # obe:hasAddress 0..1 
-    built_form: Optional[str]                   # obe:hasBuiltForm/a 0..1
+    concept: str  # a
+    address: Optional[IctAddress]  # obe:hasAddress 0..1
+    built_form: Optional[str]  # obe:hasBuiltForm/a 0..1
     # construction_component: List[str]           # obe:hasConstructionComponent 0..4
     # construction_date: Optional[str]            # obe:hasConstructionDate 0..1
-    energy_rating: Optional[str]                # obe:hasEnegyRating 0..1
+    energy_rating: Optional[str]  # obe:hasEnegyRating 0..1
     # identifier: Optional[str]                   # obe:hasIdentifier 0..1
-    latest_epc: Optional[str]                   # obe:hasLatestEPC 0..1
-    number_of_habitable_rooms: Optional[Decimal]    # obe:hasNumberOfHabitableRooms 0..1
-    property_type: Optional[str]                # obe:hasPropertyType/a 0..1
-    property_usage: Tuple[OBEPropertyUsage, ...]      # obe:hasPropertyUsage 0..2
-    total_floor_area: Optional[OmMeasure]       # obe:hasTotalFloorArea/om:hasValue 0..1
+    latest_epc: Optional[str]  # obe:hasLatestEPC 0..1
+    number_of_habitable_rooms: Optional[Decimal]  # obe:hasNumberOfHabitableRooms 0..1
+    property_type: Optional[str]  # obe:hasPropertyType/a 0..1
+    property_usage: Tuple[OBEPropertyUsage, ...]  # obe:hasPropertyUsage 0..2
+    total_floor_area: Optional[OmMeasure]  # obe:hasTotalFloorArea/om:hasValue 0..1
     # is_in: Optional[str]                        # obe:isIn 0..1
     # located_in: Optional[str]                   # obe:locatedIn 0..1
-    market_value: Optional[OmMeasure]           # obe:hasMarketValue/om:hasValue 0..1
-    latest_transaction_record: Optional[str]    # obe:hasLatestTransactionRecord 0..1
-    ground_elevation: Optional[OmMeasure]       # obe:hasGroundElevation/om:hasValue, only for dabgeo:Building
+    market_value: Optional[OmMeasure]  # obe:hasMarketValue/om:hasValue 0..1
+    latest_transaction_record: Optional[str]  # obe:hasLatestTransactionRecord 0..1
+    ground_elevation: Optional[
+        OmMeasure
+    ]  # obe:hasGroundElevation/om:hasValue, only for dabgeo:Building
 
     def __post_init__(self):
         object.__setattr__(self, "concepts", tuple(self.concept))

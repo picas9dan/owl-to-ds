@@ -1,6 +1,6 @@
 import random
 
-from constants.functions import PRIMITIVE_NUM_OPS, NumOp
+from constants.functions import OBE_NUM_OPS, NumOp
 from constants.ontobuiltenv import OBEAttrKey
 from locate_then_ask.ontobuiltenv.locate.attr import OBEAttrLocator
 from locate_then_ask.ontobuiltenv.model import OBEProperty
@@ -12,7 +12,7 @@ class OBENumOfHabitableRoomsLocator(OBEAttrLocator):
     def locate(self, query_graph: QueryGraph, entity: OBEProperty):
         assert entity.number_of_habitable_rooms is not None
         
-        operator = random.choice(PRIMITIVE_NUM_OPS)
+        operator = random.choice(OBE_NUM_OPS)
         operand, verbn = make_operand_and_verbn(
             operator, value=entity.number_of_habitable_rooms, to_int=True
         )

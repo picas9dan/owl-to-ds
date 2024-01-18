@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 import pandas as pd
 from constants.fs import ROOTDIR
@@ -44,6 +45,7 @@ LIMIT 100"""
             df.to_csv(self.FILEPATH, index=False)
         else:
             df = pd.read_csv(self.FILEPATH)
+        df.replace({np.nan: None}, inplace=True)
         self.df = df
 
     def make(self) -> IctAddress:
