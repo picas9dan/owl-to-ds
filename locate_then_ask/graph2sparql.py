@@ -139,15 +139,12 @@ class Graph2Sparql:
         ]
 
         def resolve_proj(n: str):
-            do_count = query_graph.nodes[n].get("count")
             agg = query_graph.nodes[n].get("agg")
-            assert not (do_count and agg)
-
-            if do_count:
-                return "(COUNT(?{n}) AS ?{n}Count)".format(n=n)
 
             if agg:
-                if agg is AggOp.AVG:
+                if agg is AggOp.COUNT:
+                    return "(COUNT(?{n}) AS ?{n}Count)".format(n=n)
+                elif agg is AggOp.AVG:
                     return "(AVG(?{n}) AS ?{n}Avg)".format(n=n)
                 elif agg is AggOp.MIN:
                     return "(MIN(?{n}) AS ?{n}Min)".format(n=n)
@@ -162,19 +159,19 @@ class Graph2Sparql:
 
     @classmethod
     def make_groupby_clause(self, query_graph: QueryGraph):
-        if not query_graph.groupby_vars:
+        if not query_graph.groupby:
             return None
-        return "GROUP BY " + " ".join("?" + x for x in query_graph.groupby_vars)
+        return "GROUP BY " + " ".join("?" + x for x in query_graph.groupby)
 
     @classmethod
     def make_order_clause(self, query_graph: QueryGraph):
-        if not query_graph.order_conds:
+        if not query_graph.orderby:
             return None
         return "ORDER BY " + " ".join(
             "DESC(?{n})".format(n=order_cond.var)
             if order_cond.desc
             else "?" + order_cond.var
-            for order_cond in query_graph.order_conds
+            for order_cond in query_graph.orderby
         )
 
     @classmethod

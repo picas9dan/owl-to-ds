@@ -16,6 +16,9 @@ class QueryGraph(nx.DiGraph):
     _BN_PREFIX = "BN_"
     _FUNC_PREFIX = "Func_"
     _TOPICNODE_ATTRNAME = "topic_node"
+    _GROUPBY_KEY = "GroupBy"
+    _ORDERBY_KEY = "OrderBy"
+    _LIMIT_KEY = "Limit"
 
     @classmethod
     def is_literal_node(cls, n: str):
@@ -24,12 +27,6 @@ class QueryGraph(nx.DiGraph):
     @classmethod
     def is_blank_node(cls, n: str):
         return n.startswith(cls._BN_PREFIX)
-
-    def __init__(self, incoming_graph_data=None, **attr):
-        self.groupby_vars: List[str] = []
-        self.order_conds: List[OrderCond] = []
-        self.limit: Optional[int] = None
-        super().__init__(incoming_graph_data, **attr)
 
     def get_preds(self, subj: str):
         return [p for u, _, p in self.edges(data="label") if u == subj]
@@ -83,8 +80,8 @@ class QueryGraph(nx.DiGraph):
         )
         self.add_edge(target_node, func_node, label="func")
 
-    def add_question_node(self, n: str, count: bool = False, agg: Optional[AggOp] = None):
-        self.add_node(n, question_node=True, count=count, agg=agg)
+    def add_question_node(self, n: str, agg: Optional[AggOp] = None):
+        self.add_node(n, question_node=True, agg=agg)
 
     def add_triple(self, s: str, p: str, o: str):
         self.add_edge(s, o, label=p)
@@ -93,10 +90,29 @@ class QueryGraph(nx.DiGraph):
         self.add_edges_from([(s, o, dict(label=p)) for s, p, o in triples])
 
     def add_groupby(self, n: str):
-        self.groupby_vars.append(n)
+        if self._GROUPBY_KEY not in self.graph:
+            self.graph[self._GROUPBY_KEY] = [n]
+        else:
+            self.graph[self._GROUPBY_KEY].append(n)
 
     def add_orderby(self, n: str, desc: bool = False):
-        self.order_conds.append(OrderCond(desc=desc, var=n))
+        cond = OrderCond(desc=desc, var=n)
+        if self._ORDERBY_KEY not in self.graph:
+            self.graph[self._ORDERBY_KEY] = [cond]
+        else:
+            self.graph[self._ORDERBY_KEY].append(cond)
 
     def set_limit(self, limit: int):
-        self.limit = limit
+        self.graph[self._LIMIT_KEY] = limit
+
+    @property
+    def groupby(self):
+        return tuple(self.graph.get(self._GROUPBY_KEY, []))
+    
+    @property
+    def orderby(self):
+        return tuple(self.graph.get(self._ORDERBY_KEY, []))
+    
+    @property
+    def limit(self):
+        return self.graph.get(self._LIMIT_KEY, None)

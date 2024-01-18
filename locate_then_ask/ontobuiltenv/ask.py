@@ -1,10 +1,13 @@
 import random
+
+import numpy as np
 from constants.functions import AGG_OP_LABELS, EXTREME_FREQ_LABELS, EXTREMUM_OPS, AggOp
 from constants.om import OM_KEY_LABELS
 
 from constants.ontobuiltenv import OBE_ATTR_LABELS, OBEAttrKey
 from locate_then_ask.graph2sparql import Graph2Sparql
 from locate_then_ask.query_graph import QueryGraph
+from utils.numerical import normalize_1d
 
 
 class OBEAsker:
@@ -88,7 +91,7 @@ class OBEAsker:
         return query_sparql, verbalization
 
     def ask_count(self, query_graph: QueryGraph, verbalization: str):
-        query_graph.add_question_node("Property", count=True)
+        query_graph.add_question_node("Property", agg=AggOp.COUNT)
 
         query_sparql = self.graph2sparql.convert(query_graph)
         template = random.choice(
@@ -142,7 +145,7 @@ class OBEAsker:
                 ]
             )
 
-            agg = random.choice(tuple(AggOp))
+            agg = random.choice([AggOp.MIN, AggOp.MAX, AggOp.AVG])
             query_graph.add_question_node(value_node, agg=agg)
 
             template = "{modifier} {attr}"
@@ -213,11 +216,11 @@ class OBEAsker:
             if x in self._find_unsampled_keys(query_graph)
         ]
         key = random.choice(sampling_frame)
-        modifier = random.choice([AggOp.MIN, AggOp.MAX])
+        modifier = random.choice(EXTREMUM_OPS)
 
         query_graph.add_triple("Property", "obe:has" + key.value, key.value)
         query_graph.add_question_node(key.value)
-        query_graph.add_question_node("Property", count=True)
+        query_graph.add_question_node("Property", agg=AggOp.COUNT)
         query_graph.add_groupby(key.value)
         query_graph.add_orderby("PropertyCount", desc=modifier is AggOp.MAX)
         query_graph.set_limit(limit)

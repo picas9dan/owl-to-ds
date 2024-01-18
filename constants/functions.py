@@ -27,6 +27,7 @@ class StrOp(Enum):
 
 
 class AggOp(Enum):
+    COUNT = "count"
     MIN = "min"
     MAX = "max"
     AVG = "avg"

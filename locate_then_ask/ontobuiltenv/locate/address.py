@@ -25,12 +25,8 @@ class OBEAddressLocator(OBEAttrLocator):
         candidates = entity.address.get_nonnone_keys()
         assert len(candidates) > 0
 
-        if (
-            "postal_code" in candidates
-            and len(candidates) > 1
-            and random.random() < 1 / 3
-        ):
-            if random.getrandbits(1):
+        if "postal_code" in candidates and random.random() < 2/3:
+            if len(candidates) == 1 or random.getrandbits(1):
                 # locate by postal code
                 postalcode_node = query_graph.make_literal_node(
                     entity.address.postal_code

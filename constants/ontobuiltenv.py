@@ -34,7 +34,7 @@ OBE_ATTR_LABELS = {
         )
     ],
     OBEAttrKey.NUMBER_OF_HABITABLE_ROOMS: ["number of habitable rooms"],
-    OBEAttrKey.PROPERTY_TYPE: ["type"],
+    OBEAttrKey.PROPERTY_TYPE: ["property type"],
     OBEAttrKey.PROPERTY_USAGE: ["usage"],
     OBEAttrKey.TOTAL_FLOOR_AREA: ["total floor area"],
     OBEAttrKey.MARKET_VALUE: ["market value"],

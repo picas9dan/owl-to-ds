@@ -1,3 +1,4 @@
+import dataclasses
 from decimal import Decimal
 import json
 
@@ -19,11 +20,13 @@ PUBLIC_ENUMS = {
 
 class EnumEncoder(json.JSONEncoder):
     def default(self, obj):
+        if dataclasses.is_dataclass(obj):
+            return dataclasses.asdict(obj)
         if isinstance(obj, Decimal):
             return float(obj)
         if type(obj) in PUBLIC_ENUMS.values():
             return {"__enum__": str(obj)}
-        return json.JSONEncoder.default(self, obj)
+        return super().default(self, obj)
 
 
 def as_enum(d):

@@ -25,15 +25,15 @@ from .latest_transaction_record import OBELatestTransactionRecordLocator
 class OBELocator:
     ATTR_KEY_WEIGHTS = {
         OBEAttrKey.ADDRESS: 4,
-        OBEAttrKey.BUILT_FORM: 3,
+        OBEAttrKey.BUILT_FORM: 2,
         OBEAttrKey.ENERGY_RATING: 1,
-        OBEAttrKey.LATEST_EPC: 1,
+        OBEAttrKey.LATEST_EPC: 1.4,
         OBEAttrKey.NUMBER_OF_HABITABLE_ROOMS: 1,
-        OBEAttrKey.PROPERTY_TYPE: 4,
+        OBEAttrKey.PROPERTY_TYPE: 2,
         OBEAttrKey.PROPERTY_USAGE: 25,
         OBEAttrKey.TOTAL_FLOOR_AREA: 1,
         OBEAttrKey.MARKET_VALUE: 1,
-        OBEAttrKey.LATEST_TRANSACTION_RECORD: 1,
+        OBEAttrKey.LATEST_TRANSACTION_RECORD: 1.4,
         OBEAttrKey.GROUND_ELEVATION: 1,
     }
 

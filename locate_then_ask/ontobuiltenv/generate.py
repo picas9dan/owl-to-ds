@@ -104,14 +104,13 @@ LIMIT {num}"""
     def _compute_ask_strategies(self, query_graph: QueryGraph, locate_strategy: str):
         if locate_strategy == "concept_name":
             ask_strategies = [
-                "name",
                 "count",
                 "agg",
                 "name_byExtremeAttr",
                 "attr_byEntityFreq",
                 "attr_byAnotherAggAttr",
             ]
-            ask_strategy_counts = [1, 1, 3, 2, 2, 2]
+            ask_strategy_counts = [1, 6, 4, 4, 4]
         elif locate_strategy == "concept_and_literal":
             ask_strategies = ["name", "count", "attribute"]
             ask_strategy_counts = [1, 1, 6]
@@ -169,7 +168,7 @@ LIMIT {num}"""
 
         for i, entity in enumerate(tqdm(self.seed_entities * n_repeats)):
             locate_strategy = np.random.choice(
-                ["concept_name", "concept_and_literal"], p=normalize_1d([1, 99])
+                ["concept_name", "concept_and_literal"], p=normalize_1d([1, 4])
             )
 
             query_graph, verbn = self._locate(entity, locate_strategy)
