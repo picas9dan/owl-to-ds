@@ -181,6 +181,10 @@ class Paraphraser:
 
             words = paraphrase.split()
             candidates = [words[i : i + w_num] for i in range(len(words) - w_num)]
+            if not candidates:
+                corrected = False
+                break
+            
             dists = np.array(
                 [
                     Levenshtein.distance(" ".join(c).lower(), _l)
