@@ -15,6 +15,8 @@ def main():
     parser.add_argument("--dev_frac", type=float, default=0.1)
     args = parser.parse_args()
 
+    assert args.test_frac + args.dev_frac < 1
+
     split2data = dict(test=[], dev=[], train=[])
     for ds in args.datasets:
         with open(ds, "r") as f:

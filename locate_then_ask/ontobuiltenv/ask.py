@@ -76,6 +76,12 @@ class OBEAsker:
                 return "street"
             else:
                 raise Exception("Unexpected value: " + q)
+        elif key in [OBEAttrKey.BUILT_FORM, OBEAttrKey.PROPERTY_USAGE, OBEAttrKey.PROPERTY_TYPE]:
+            qnode = key.value + "Type"
+            query_graph.add_question_node(qnode)
+            query_graph.add_triple("Property", "obe:has{key}/a".format(key=key.value), qnode)
+
+            return random.choice(OBE_ATTR_LABELS[key])
         else:
             query_graph.add_question_node(key.value)
             query_graph.add_triple("Property", "obe:has" + key.value, key.value)
