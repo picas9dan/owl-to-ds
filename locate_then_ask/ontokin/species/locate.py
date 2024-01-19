@@ -10,9 +10,7 @@ class OKSpeciesLocator:
         self.store = store
 
     def locate_entity_name(self, entity_iri: str):
-        entity = self.store.get(entity_iri)
-        assert isinstance(entity, OKSpecies)
-
+        entity = self.store.get_species(entity_iri)
         label = entity.label
 
         query_graph = QueryGraph()
@@ -28,11 +26,9 @@ class OKSpeciesLocator:
         query_graph = QueryGraph()
         query_graph.add_topic_node("Species", iri=entity_iri)
 
-        entity = self.store.get(entity_iri)
-        assert isinstance(entity, OKSpecies)
-
+        entity = self.store.get_species(entity_iri)
         mechanism_iri = random.choice(entity.mechanism_iris)
-        mechanism = self.store.get(mechanism_iri)
+        mechanism = self.store.get_mechanism(mechanism_iri)
 
         query_graph.add_node("Mechanism", iri=mechanism.iri)
         doi_node = query_graph.make_literal_node(value=mechanism.doi)

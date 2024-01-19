@@ -13,16 +13,14 @@ class OKMechanismLocator:
         self, query_graph: QueryGraph, cond_num: int = 1
     ):
         entity_iri = query_graph.nodes["Mechanism"]["iri"]
-        entity = self.store.get(entity_iri)
-        assert isinstance(entity, OKMechanism)
+        entity = self.store.get_mechanism(entity_iri)
 
         species_iris = random.sample(
             entity.species_iris, k=min(cond_num, len(entity.species_iris))
         )
         labels = []
         for species_iri in species_iris:
-            species = self.store.get(species_iri)
-            assert isinstance(species, OKSpecies)
+            species = self.store.get_species(species_iri)
 
             labels.append(species.label)
             literal_node = query_graph.make_literal_node(value=species.label)
@@ -40,16 +38,14 @@ class OKMechanismLocator:
         self, query_graph: QueryGraph, cond_num: int = 1
     ):
         entity_iri = query_graph.nodes["Mechanism"]["iri"]
-        entity = self.store.get(entity_iri)
-        assert isinstance(entity, OKMechanism)
+        entity = self.store.get_mechanism(entity_iri)
 
         rxn_iris = random.sample(
             entity.reaction_iris, k=min(cond_num, len(entity.reaction_iris))
         )
         labels = []
         for rxn_iri in rxn_iris:
-            rxn = self.store.get(rxn_iri)
-            assert isinstance(rxn, OKGasPhaseReaction)
+            rxn = self.store.get_rxn(rxn_iri)
 
             eqn = random.choice(rxn.equations)
             labels.append(eqn)

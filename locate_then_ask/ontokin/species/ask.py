@@ -1,4 +1,5 @@
 import random
+from constants.functions import AggOp
 from locate_then_ask.ask import ask_name
 
 from locate_then_ask.graph2sparql import Graph2Sparql
@@ -10,7 +11,7 @@ class OKSpeciesAsker:
         return ask_name(query_graph, verbalization, "Species")
 
     def ask_count(self, query_graph: QueryGraph, verbalization: str):
-        query_graph.add_question_node("Species", count=True)
+        query_graph.add_question_node("Species", agg=AggOp.COUNT)
 
         if verbalization.startswith("the"):
             verbalization = verbalization[len("the") :].strip()

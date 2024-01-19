@@ -15,9 +15,7 @@ class OKReactionLocator:
         self.store = store
 
     def locate_concept_and_attribute(self, entity_iri: str):
-        entity = self.store.get(entity_iri)
-        assert isinstance(entity, OKGasPhaseReaction)
-
+        entity = self.store.get_rxn(entity_iri)
         eqn = random.choice(entity.equations)
 
         query_graph = QueryGraph()
@@ -29,8 +27,7 @@ class OKReactionLocator:
 
         if random.getrandbits(1):
             mechanism_iri = random.choice(entity.mechanism_iris)
-            mechanism = self.store.get(mechanism_iri)
-            assert isinstance(mechanism, OKMechanism)
+            mechanism = self.store.get_mechanism(mechanism_iri)
 
             mechanism_node = "Mechanism"
             doi_node = query_graph.make_literal_node(mechanism.doi)
@@ -54,8 +51,7 @@ class OKReactionLocator:
     def locate_concept_and_relation_multi(self, entity_iri: str, cond_num: int):
         query_graph = QueryGraph()
         query_graph.add_topic_node("Reaction", iri=entity_iri)
-        entity = self.store.get(entity_iri)
-        assert isinstance(entity, OKGasPhaseReaction)
+        entity = self.store.get_rxn(entity_iri)
 
         popln = ["reactant", "product", "mechanism"]
         counts = [len(entity.reactant_iris), len(entity.product_iris), 1]
@@ -82,8 +78,7 @@ class OKReactionLocator:
             if key == "reactant":
                 labels = []
                 for reactant_iri in random.sample(entity.reactant_iris, k=freq):
-                    reactant = self.store.get(reactant_iri)
-                    assert isinstance(reactant, OKSpecies)
+                    reactant = self.store.get_species(reactant_iri)
 
                     literal_node = query_graph.make_literal_node(reactant.label)
                     query_graph.add_triple(
@@ -100,8 +95,7 @@ class OKReactionLocator:
             elif key == "product":
                 labels = []
                 for product_iri in random.sample(entity.product_iris, k=freq):
-                    product = self.store.get(product_iri)
-                    assert isinstance(product, OKSpecies)
+                    product = self.store.get_species(product_iri)
 
                     literal_node = query_graph.make_literal_node(product.label)
                     query_graph.add_triple(
@@ -118,8 +112,7 @@ class OKReactionLocator:
                 for species_iri in random.sample(
                     entity.reactant_iris + entity.product_iris, k=freq
                 ):
-                    species = self.store.get(species_iri)
-                    assert isinstance(species, OKSpecies)
+                    species = self.store.get_species(species_iri)
 
                     literal_node = query_graph.make_literal_node(species.label)
                     query_graph.add_triple(
@@ -141,7 +134,7 @@ class OKReactionLocator:
             elif key == "mechanism":
                 assert freq == 1
                 mechanism_iri = random.choice(entity.mechanism_iris)
-                mechanism = self.store.get(mechanism_iri)
+                mechanism = self.store.get_mechanism(mechanism_iri)
 
                 literal_node = query_graph.make_literal_node(mechanism.doi)
                 query_graph.add_node("Mechanism", iri=mechanism_iri)

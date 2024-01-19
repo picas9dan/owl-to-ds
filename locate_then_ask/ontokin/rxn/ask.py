@@ -1,4 +1,5 @@
 import random
+from constants.functions import AggOp
 
 from locate_then_ask.ask import ask_name
 from locate_then_ask.graph2sparql import Graph2Sparql
@@ -12,7 +13,7 @@ class OKReactionAsker:
     def ask_count(self, query_graph: QueryGraph, verbalization: str):
         assert "Mechanism" in query_graph.nodes()
 
-        query_graph.add_question_node("Reaction", count=True)
+        query_graph.add_question_node("Reaction", agg=AggOp.COUNT)
 
         if verbalization.startswith("the"):
             verbalization = verbalization[len("the") :].strip()
