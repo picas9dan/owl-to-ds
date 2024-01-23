@@ -11,9 +11,9 @@ def count_schema_items(query_graphs: Iterable[QueryGraph]):
     for query_graph in query_graphs:
         for s, o, p in query_graph.edges(data="label"):
             props = p.split("/")
-            if props[-1] in ["a", "rdfs:subClassOf", "rdfs:subClassOf*"]:
+            if props[-1] in ["a", "rdfs:subClassOf", "rdfs:subClassOf*"] and query_graph.nodes[o].get("template_node"):
                 cls2freq[o] += 1
-            if props[0] in ["rdfs:subClassOf", "rdfs:subClassOf*"]:
+            if props[0] in ["rdfs:subClassOf", "rdfs:subClassOf*"] and query_graph.nodes[s].get("template_node"):
                 cls2freq[s] += 1
 
             stack = []
