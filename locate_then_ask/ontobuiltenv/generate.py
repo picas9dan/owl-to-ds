@@ -9,7 +9,7 @@ import networkx as nx
 import numpy as np
 from tqdm import tqdm
 from constants.fs import ROOTDIR
-from constants.ontobuiltenv import OBE_PROPERTYUSAGE_LABELS
+from constants.ontobuiltenv import OBE_PROPERTYUSAGE_LABELS, OBEAttrKey
 from locate_then_ask.query_graph import QueryGraph
 from utils.numerical import normalize_1d
 
@@ -23,6 +23,17 @@ class OBEDatasetGenerator:
     SEED_ENTITIES_FILEPATH = os.path.join(
         ROOTDIR, "data/seed_entities/ontobuiltenv.txt"
     )
+
+    ASK2WEIGHT = {
+        "name": 1,
+        "count": 1,  # 1 agg (count)
+        "attribute": 7,  # 11 keys
+        "agg": 4,  # 3 agg (min, max, avg) + 3 keys (numerical)
+        "name_byExtremeAttr": 3,  # 2 agg (min, max) + 3 keys (numerical)
+        "attr_byEntityFreq": 6,  # 3 agg (min, max, count) + 6 keys (discrete)
+        "attr_byExtremeAttr": 8,  # 2 agg (min, max) + 11 keys
+        "discreteAttr_byExtremeAvgAttr": 8,  # 3 agg (min, max, agg) + 9 keys (discrete, numerical)
+    }
 
     @classmethod
     def _retrieve_seed_entities(cls):
@@ -108,27 +119,31 @@ LIMIT {num}"""
                 "agg",
                 "name_byExtremeAttr",
                 "attr_byEntityFreq",
-                "attr_byAnotherAggAttr",
+                "attr_byExtremeAttr",
+                "discreteAttr_byExtremeAvgAttr",
             ]
-            ask_strategy_counts = [1, 6, 4, 4, 4]
         elif locate_strategy == "concept_and_literal":
             ask_strategies = ["name", "count", "attribute"]
-            ask_strategy_counts = [1, 1, 6]
 
             sampled_attr_keys = tuple(
                 key for _, key in query_graph.nodes(data="key") if key is not None
             )
-            if any(k not in sampled_attr_keys for k in OBEAsker.NUMERICAL_KEYS):
-                ask_strategies.extend(
-                    ["agg", "name_byExtremeAttr", "attr_byAnotherAggAttr"]
-                )
-                ask_strategy_counts.extend([3, 2, 2])
+            unsampled_numerical_keys = [
+                k not in sampled_attr_keys for k in OBEAsker.NUMERICAL_KEYS
+            ]
+            if unsampled_numerical_keys:
+                ask_strategies.extend(["agg", "name_byExtremeAttr"])
+                if len(unsampled_numerical_keys) > 2 or any(
+                    k not in sampled_attr_keys for k in OBEAttrKey
+                ):
+                    ask_strategies.append("attr_byExtremeAttr")
+                if any(k not in sampled_attr_keys for k in OBEAsker.DISCRETE_ATTRS):
+                    ask_strategies.append("discreteAttr_byExtremeAvgAttr")
             if any(k not in sampled_attr_keys for k in OBEAsker.DISCRETE_ATTRS):
                 ask_strategies.append("attr_byEntityFreq")
-                ask_strategy_counts.append(2)
         else:
             raise ValueError("Unexpected locate strategy: " + locate_strategy)
-        return ask_strategies, ask_strategy_counts
+        return ask_strategies
 
     def _ask(self, query_graph: QueryGraph, verbn: str, ask_strategy: str):
         if ask_strategy == "name":
@@ -153,9 +168,14 @@ LIMIT {num}"""
             query_sparql, verbn = self.asker.ask_attr_byEntityFreq(
                 query_graph, verbn, limit
             )
-        elif ask_strategy == "attr_byAnotherAggAttr":
+        elif ask_strategy == "attr_byExtremeAttr":
             limit = random.randrange(1, 100)
             query_sparql, verbn = self.asker.ask_attr_byExtremeAttr(
+                query_graph, verbn, limit=limit
+            )
+        elif ask_strategy == "discreteAttr_byExtremeAvgAttr":
+            limit = random.randrange(1, 100)
+            query_sparql, verbn = self.asker.ask_discreteAttr_byExtremeAvgAttr(
                 query_graph, verbn, limit=limit
             )
         else:
@@ -172,12 +192,11 @@ LIMIT {num}"""
             )
 
             query_graph, verbn = self._locate(entity, locate_strategy)
-            ask_strategies, ask_strategy_counts = self._compute_ask_strategies(
-                query_graph, locate_strategy
-            )
+            ask_strategies = self._compute_ask_strategies(query_graph, locate_strategy)
 
             ask_strategy = np.random.choice(
-                ask_strategies, p=normalize_1d(ask_strategy_counts)
+                ask_strategies,
+                p=normalize_1d([self.ASK2WEIGHT[x] for x in ask_strategies]),
             )
             query_sparql, verbn = self._ask(query_graph, verbn, ask_strategy)
 

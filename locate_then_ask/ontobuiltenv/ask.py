@@ -24,7 +24,7 @@ class OBEAsker:
     }
 
     DISCRETE_ATTRS = [
-        # OBEAttrKey.ADDRESS,
+        OBEAttrKey.ADDRESS,
         OBEAttrKey.BUILT_FORM,
         OBEAttrKey.ENERGY_RATING,
         OBEAttrKey.NUMBER_OF_HABITABLE_ROOMS,
@@ -76,10 +76,16 @@ class OBEAsker:
                 return "street"
             else:
                 raise Exception("Unexpected value: " + q)
-        elif key in [OBEAttrKey.BUILT_FORM, OBEAttrKey.PROPERTY_USAGE, OBEAttrKey.PROPERTY_TYPE]:
+        elif key in [
+            OBEAttrKey.BUILT_FORM,
+            OBEAttrKey.PROPERTY_USAGE,
+            OBEAttrKey.PROPERTY_TYPE,
+        ]:
             qnode = key.value + "Type"
             query_graph.add_question_node(qnode)
-            query_graph.add_triple("Property", "obe:has{key}/a".format(key=key.value), qnode)
+            query_graph.add_triple(
+                "Property", "obe:has{key}/a".format(key=key.value), qnode
+            )
 
             return random.choice(OBE_ATTR_LABELS[key])
         else:
@@ -151,7 +157,9 @@ class OBEAsker:
                 ]
             )
 
-            agg = random.choice([AggOp.MIN, AggOp.MAX, AggOp.AVG])
+            agg = np.random.choice(
+                [AggOp.MIN, AggOp.MAX, AggOp.AVG], p=normalize_1d([2, 2, 1])
+            )
             query_graph.add_question_node(value_node, agg=agg)
 
             template = "{modifier} {attr}"
@@ -224,10 +232,8 @@ class OBEAsker:
         key = random.choice(sampling_frame)
         modifier = random.choice(EXTREMUM_OPS)
 
-        query_graph.add_triple("Property", "obe:has" + key.value, key.value)
-        query_graph.add_question_node(key.value)
+        attr_verbn = self._ask_attr(query_graph, key)
         query_graph.add_question_node("Property", agg=AggOp.COUNT)
-        query_graph.add_groupby(key.value)
         query_graph.add_orderby("PropertyCount", desc=modifier is AggOp.MAX)
         query_graph.set_limit(limit)
 
@@ -236,7 +242,7 @@ class OBEAsker:
         verbalization = template.format(
             limit=limit,
             modifier=random.choice(EXTREME_FREQ_LABELS[modifier]),
-            attr=random.choice(OBE_ATTR_LABELS[key]),
+            attr=attr_verbn,
             located=verbalization,
         )
 
@@ -286,6 +292,61 @@ class OBEAsker:
         template = (
             "What are the {qn_attr} of {limit} {located} and with the {modifier} {attr}"
         )
+        verbalization = template.format(
+            limit=limit,
+            qn_attr=qn_attr_verbn,
+            located=verbalization,
+            modifier=random.choice(AGG_OP_LABELS[modifier]),
+            attr=random.choice(OBE_ATTR_LABELS[extr_attr_key]),
+        )
+
+        return query_sparql, verbalization
+
+    def ask_discreteAttr_byExtremeAvgAttr(
+        self, query_graph: QueryGraph, verbalization: str, limit: int = 1
+    ):
+        extr_attr_key = random.choice(self._find_unsampled_numerical_keys(query_graph))
+        modifier = random.choice(EXTREMUM_OPS)
+
+        bn = query_graph.make_blank_node()
+        value_node = extr_attr_key.value + "NumericalValue"
+        unit = self.KEY2UNIT[extr_attr_key]
+        query_graph.add_iri_node(unit, prefixed=True)
+        query_graph.add_triples(
+            [
+                (
+                    "Property",
+                    "obe:has{key}/om:hasValue".format(key=extr_attr_key.value),
+                    bn,
+                ),
+                (bn, "om:hasNumericalValue", value_node),
+                (bn, "om:hasUnit", unit),
+            ]
+        )
+
+        qn_key = random.choice(
+            [
+                x
+                for x in self.DISCRETE_ATTRS
+                if x in self._find_unsampled_keys(query_graph)
+                and x is not extr_attr_key
+            ]
+        )
+        qn_attr_verbn = self._ask_attr(query_graph, qn_key)
+        query_graph.add_groupby(
+            next(
+                n
+                for n, question_node in query_graph.nodes(data="question_node")
+                if question_node
+            )
+        )
+        query_graph.add_question_node(value_node, agg=AggOp.AVG)
+        query_graph.add_orderby(value_node + "Avg", desc=modifier is AggOp.MAX)
+        query_graph.set_limit(limit)
+
+        query_sparql = self.graph2sparql.convert(query_graph)
+
+        template = "Among {located}, what are the {limit} {qn_attr} with the {modifier} average {attr}"
         verbalization = template.format(
             limit=limit,
             qn_attr=qn_attr_verbn,
